@@ -1,0 +1,1 @@
+/network/rit/home/dg771199/WRF-GSI/src/GSI/global_convinfo.txt

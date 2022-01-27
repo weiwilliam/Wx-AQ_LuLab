@@ -1,0 +1,52 @@
+&share
+ wrf_core = 'ARW',
+ max_dom = 2,
+ start_date = '2018-07-14_06:00:00','2018-07-14_06:00:00',
+ end_date   = '2018-07-14_12:00:00','2018-07-14_12:00:00',
+ interval_seconds = 21600
+ io_form_geogrid = 2,
+/
+
+&geogrid
+ parent_id         =   1,   1,
+ parent_grid_ratio =   1,   5,
+ i_parent_start    =   1,  76,
+ j_parent_start    =   1,  78,
+ e_we              = 200, 351,
+ e_sn              = 200, 281,
+ !
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT NOTE !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ ! The default datasets used to produce the MAXSNOALB and ALBEDO12M
+ ! fields have changed in WPS v4.0. These fields are now interpolated
+ ! from MODIS-based datasets.
+ !
+ ! To match the output given by the default namelist.wps in WPS v3.9.1,
+ ! the following setting for geog_data_res may be used:
+ !
+ ! geog_data_res = 'maxsnowalb_ncep+albedo_ncep+default', 'maxsnowalb_ncep+albedo_ncep+default', 
+ !
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT NOTE !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ !
+ geog_data_res = 'modis_30s+30s', 'modis_30s+30s',
+ dx = 15000,
+ dy = 15000,
+ map_proj = 'lambert',
+ ref_lat   =  42,
+ ref_lon   = -80,
+ truelat1  =  30,
+ truelat2  =  54,
+ stand_lon = -80,
+ geog_data_path = '/network/rit/lab/josephlab/LIN/WRF/GEOG/'
+ OPT_GEOGRID_TBL_PATH = '/network/rit/home/dg771199/WRF-GSI/src/WPS/geogrid/'
+/
+
+&ungrib
+ out_format = 'WPS',
+ prefix = 'FILE',
+/
+
+&metgrid
+ fg_name = 'FILE'
+ io_form_metgrid = 2, 
+ OPT_METGRID_TBL_PATH = '/network/rit/home/dg771199/WRF-GSI/src/WPS/metgrid/'
+/
