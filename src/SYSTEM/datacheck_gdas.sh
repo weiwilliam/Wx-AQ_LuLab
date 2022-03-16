@@ -10,14 +10,14 @@ count=0
 stopcount=5
 until [ $sqrc -ne 1 ]
 do
-    grep -i "$sdate Failed" ${CKFILE} 
+    grep -qi "$sdate Failed" ${CKFILE} 
     sqrc=$?
     if [ $sqrc -ne 1 ]
     then
         echo "Data not found"
         exit 13
     fi
-    grep -i "$sdate Succeed" ${CKFILE} 
+    grep -qi "$sdate Succeed" ${CKFILE} 
     sqrc=$?
     sleep 60
     count=$((count+1))

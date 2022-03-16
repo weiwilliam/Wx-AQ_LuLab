@@ -43,7 +43,7 @@ set -x
   #/network/rit/home/dg771199/WRF-GSI/src2/wrf
   GSI_ROOT=/network/rit/lab/josephlab/LIN/GSI/comGSIv3.7_EnKFv1.3
   CRTM_ROOT=/network/rit/lab/josephlab/LIN/GSI/CRTM_v2.3.0
-  ENS_ROOT=/network/rit/lab/josephlab/LIN/WORK/GSI/input/gfsens
+  #ENS_ROOT=/network/rit/lab/josephlab/LIN/WORK/GSI/input/gfsens
       #ENS_ROOT is not required if not running hybrid EnVAR 
   YYYY=`echo $ANAL_TIME | cut -c1-4`
   MM=`echo $ANAL_TIME | cut -c5-6`
@@ -57,6 +57,7 @@ set -x
   #GSI_NAMELIST=${GSI_ROOT}/ush/comgsi_namelist.sh.soilTQ
   GSI_NAMELIST=${JOB_DIR}/comgsi_namelist.sh.soilTQ
 #  PREPBUFR=${OBS_ROOT}/rap.t${HH}z.prepbufr.tm00
+  #PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.nr
   PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.nr
   BK_FILE=${BK_ROOT}/wrfout_d01_${YYYY}-${MM}-${DD}_${HH}:00:00
   JOBSQUEUE="`which squeue` -u ${USER}"
@@ -401,8 +402,8 @@ fi
 SATANGL=${FIX_ROOT}/global_satangbias.txt
 SATINFO=${FIX_ROOT}/global_satinfo.txt
 #hchun
-#CONVINFO=${FIX_ROOT}/global_convinfo.txt
-CONVINFO=/network/rit/home/dg771199/WRF-GSI/src2/gsi/global_convinfo.txt
+CONVINFO=${JOB_DIR}/global_convinfo.txt
+#CONVINFO=/network/rit/home/dg771199/WRF-GSI/src2/gsi/global_convinfo.txt
 OZINFO=${FIX_ROOT}/global_ozinfo.txt
 PCPINFO=${FIX_ROOT}/global_pcpinfo.txt
 LIGHTINFO=${FIX_ROOT}/global_lightinfo.txt

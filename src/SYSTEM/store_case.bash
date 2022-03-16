@@ -5,7 +5,13 @@ outdir=${2}
 sdate=${3}
 firstrun=${4}
 
-mkdir $outdir
+if [ -d $outdir ]
+then
+ echo "Warning: $outdir already exists, overwriting... "
+else
+  mkdir $outdir
+fi
+
 #WPS
 cp -f $rundir/wps/geo_em.* $outdir/.
 cp -f $rundir/wps/met_em.* $outdir/.

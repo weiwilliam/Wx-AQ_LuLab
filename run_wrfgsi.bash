@@ -2,44 +2,76 @@
 
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 
-topdir="/network/rit/home/dg771199/WRF-GSI"
-runpath="/network/asrc/scratch/lulab/dg771199"
-datpath="/network/asrc/scratch/lulab/sw651133/nomads"
-outpath="/network/rit/lab/lulab/dg771199"
-srcpath="$topdir/src"
-logpath="$topdir/log"
-obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
-gdasobsscript="cyclelist.gdas_obs.out"
-gfsobsscript="cyclelist.gfs_grib2.out"
-
 ##### SETUP SYSTEM ####
 ## Set Environment ##
-source $srcpath/FUNC/env.sh
-## Start Date ##
-sdate=`sh ${srcpath}/FUNC/get_sdate.bash`
-#sdate=${1}
-## Manual override for manual runs
-#sdate="2021083000" #+6 hour forecast
-## End Date, Previous Cycle Date( - 6hr)
-edate=`sh ${srcpath}/FUNC/get_edate.bash $sdate`
-pdate=`sh ${srcpath}/FUNC/get_pdate.bash $sdate`
-## Create Logfile and sdate dependent variables##
+topdir="/network/rit/lab/lulab/WRF-GSI"
+srcpath="$topdir/src"
+syspath="$srcpath/SYSTEM"
+wrfpath="$srcpath/WRF"
+wpspath="$srcpath/WPS"
+lbcpath="$srcpath/LBC"
+gsipath="$srcpath/GSI"
+source $syspath/env.sh
+# A clean alternative WRF installation tested
+# wrfpath="/network/rit/lab/lulab/hluo/WRF43/WRF43/run"
+
+## Input ##
+obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
+datpath="/network/asrc/scratch/lulab/sw651133/nomads"
+
+## Output ##
+runpath="/network/asrc/scratch/lulab/WRF-GSI-NRT"
+outpath="/network/rit/lab/lulab/WRF-GSI-NRT"
+logpath="$outpath/log"
+
+## Start Date for NRT run ##
+sdate=`sh ${syspath}/get_sdate.bash`
+realtime=1
+
+################################ START of test/retro control ############################
+# Manually override output pathes and sdate for test/retro runs; 
+# Creating mocking data if during LISTOS/or modify accordingly for other input
+  
+runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
+outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
+logpath="$outpath/log"
+sdate="2018080118" #10 digits time at every 6h; +6 hour forecast
+realtime=0
+
+LISTOS=1
+gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
+gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/201808"
+datpath="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata"
+obsdir="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata/logs"
+if [ $LISTOS -eq 1 ]; then
+  sh $syspath/create_mockdata.bash $gfssource $gdassource $datpath $obsdir $sdate $syspath
+fi
+#################################### END of retro control ################################
+
+
+## End Date and Previous Cycle Date( - 6hr) ##
+edate=`sh ${syspath}/get_edate.bash $sdate`
+pdate=`sh ${syspath}/get_pdate.bash $sdate`
+
+## Create Logfile and sdate dependent variables ##
 logfile="$logpath/wrfgsi.log.$sdate"
-echo "$sdate" 
+echo "Case  $sdate" 
 echo "$sdate" > $logfile
 rundir="$runpath/wrfgsi.run.$sdate"
 datdir="$rundir/dat"
 outdir="$outpath/wrfgsi.out.$sdate"
-## GFS DATA CHECK GFS##
-sh $srcpath/SCRIPTS/run_gfsdatacheck.sh $obsdir $sdate
+
+## GFS DATA CHECK ##
+sh $syspath/datacheck_gfs.sh $obsdir $sdate $realtime
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+  echo "GFS files not found by datacheck_gfs.sh" >> $logfile
   exit ${error}
 fi
+
 ## First Cycle Check ## 
-#if [ ! -d $outpath/wrfgsi.out.$pdate ]
-if [ ! -d $runpath/wrfgsi.run.$pdate ]
+if [ ! -d $outpath/wrfgsi.out.$pdate ]
 then
    firstrun=1
    echo "WRF-GSI: FIRST CYCLE" >> $logfile
@@ -47,16 +79,17 @@ else
    firstrun=0
    echo "WRF-GSI: NOT FIRST CYCLE" >> $logfile
 fi
+
 ## Create Case ##
-#sh $srcpath/FUNC/create_case.bash $datpath $rundir $outpath $srcpath $sdate $firstrun
-sh $srcpath/FUNC/create_case.bash $datpath $rundir $runpath $srcpath $sdate $firstrun #also got change func
+sh $syspath/create_case.bash $datpath $rundir $runpath $syspath $wpspath $wrfpath $lbcpath  $gsipath $sdate $firstrun
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+  echo "Run directory already exists by create_case.bash. Remove/rename previous run directory to restart." >> $logfile
   exit ${error}
 fi
-sh $srcpath/FUNC/create_namelist.wps.bash $rundir $sdate $edate
-sh $srcpath/FUNC/create_namelist.input.bash $rundir $sdate $edate
+sh $syspath/create_namelist.wps.bash $rundir $sdate $edate
+sh $syspath/create_namelist.input.bash $rundir $sdate $edate
 
 ##### BEGIN SYSTEM #####
 ## GOTO WPS ##
@@ -68,11 +101,12 @@ then
   error=$?
   if [ ${error} -ne 0 ]; then
     echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+    echo "Run directory already exists by create_c." >> $logfile
     exit ${error}
   fi
 fi
 # UNGRIB ##
-./link_grib.csh $datdir/ 
+./link_grib.csh $datdir/gfs/
 sh run_ungrib.sh $rundir/wps
 error=$?
 if [ ${error} -ne 0 ]; then
@@ -86,6 +120,7 @@ if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
   exit ${error}
 fi
+
 ## GOTO WRF ##
 cd $rundir/wrf
 ## REAL ##
@@ -96,10 +131,11 @@ if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
   exit ${error}
 fi
+
 ## GDAS DATA CHECK ##
 if [ $firstrun -eq 0 ] ## Not first run of cycled system.
 then
-   sh $srcpath/SCRIPTS/run_gdasdatacheck.sh $obsdir $sdate
+   sh $syspath/datacheck_gdas.sh $obsdir $sdate
    error=$?
    if [ ${error} -ne 0 ]; then
       echo "WARNING: GDAS data not found. Thus, $sdate is now the FIRST CYCLE" >> $logfile
@@ -108,14 +144,6 @@ then
 fi
 if [ $firstrun -eq 0 ] ## Not first run of cycled system. So run GSI and LBC before WRF
 then
-   ## DATA CHECK ###
-   sh $srcpath/SCRIPTS/run_gdasdatacheck.sh $obsdir $sdate
-   ##IF GDAS Fails then just run wrf, which is assuming its like a first run.
-     if [ ${error} -ne 0 ]; then
-     echo "WARNING: GDAS data not found. Thus, $sdate is now the FIRST CYCLE" >> $logfile
-     firstrun=1
-     break ${error}
-   fi
    ## GOTO GSI ##
    cd $rundir/gsi
    #GSI with 6 hour wrfout + data from pdate
@@ -123,7 +151,7 @@ then
    #gsiwrfoutdir="$outpath/wrfgsi.out.$pdate"
    gsiwrfoutdir="$runpath/wrfgsi.run.$pdate/wrf"
    ./run_gsi_regional.ksh $sdate $rundir $gsiwrfoutdir > GSI.log  2>&1
-   sh run_gsicheck.sh
+   sh datacheck_gsi.sh
    error=$?
    if [ ${error} -ne 0 ]; then
      echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
@@ -151,7 +179,7 @@ if [ ${error} -ne 0 ]; then
   exit ${error}
 fi
 ## STORE RUN ##
-sh $srcpath/FUNC/store_case.bash $rundir $outdir $sdate $firstrun
+sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun
 ## CLEAN UP ##
 echo "Firstrun is $firstrun" >> $logfile
 echo "Program Complete for $sdate" >> $logfile

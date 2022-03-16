@@ -50,8 +50,8 @@ cat << EOF > $fileo
  truelat1  =  30,
  truelat2  =  54,
  stand_lon = -80,
- geog_data_path = '/network/rit/home/dg771199/WRF-GSI/src/WPS/GEOG/'
- OPT_GEOGRID_TBL_PATH = '/network/rit/home/dg771199/WRF-GSI/src/WPS/geogrid/'
+ geog_data_path = '/network/rit/lab/lulab/WRF-GSI/geog/'
+ OPT_GEOGRID_TBL_PATH = '/network/rit/lab/lulab/WRF-GSI/src/WPS/geogrid/'
 /
 
 &ungrib
@@ -62,6 +62,6 @@ cat << EOF > $fileo
 &metgrid
  fg_name = 'FILE'
  io_form_metgrid = 2,
- OPT_METGRID_TBL_PATH = '/network/rit/home/dg771199/WRF-GSI/src/WPS/metgrid/'
+ OPT_METGRID_TBL_PATH = '/network/rit/lab/lulab/WRF-GSI/src/WPS/metgrid/'
 /
 EOF

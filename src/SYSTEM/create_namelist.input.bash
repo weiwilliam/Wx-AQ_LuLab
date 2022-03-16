@@ -53,7 +53,7 @@ cat << EOF > $fileo
  e_sn                                = 200,    281,   229,
  e_vert                              = 50,     50,    43,
  p_top_requested                     = 5000,
- num_metgrid_levels                  = 34,
+ num_metgrid_levels                  = 32,
  num_metgrid_soil_levels             = 4,
  dx                                  = 15000, 3000,  3000,
  dy                                  = 15000, 3000,  3000,
