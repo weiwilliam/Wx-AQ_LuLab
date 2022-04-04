@@ -1,53 +1,80 @@
 #!/bin/bash
-
+#set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 
 ##### SETUP SYSTEM ####
 ## Set Environment ##
-topdir="/network/rit/lab/lulab/WRF-GSI"
-srcpath="$topdir/src"
-syspath="$srcpath/SYSTEM"
-wrfpath="$srcpath/WRF"
-wpspath="$srcpath/WPS"
-lbcpath="$srcpath/LBC"
-gsipath="$srcpath/GSI"
-source $syspath/env.sh
-# A clean alternative WRF installation tested
+topdir=$PWD #"/network/rit/lab/lulab/WRF-GSI"
+syspath="$topdir/src/SYSTEM"
+# Define your folders of installed packages
+# A clean alternative WRF installation tested on Kratos
 # wrfpath="/network/rit/lab/lulab/hluo/WRF43/WRF43/run"
+wrfpath="/network/rit/lab/lulab/WRF-GSI/src/WRF"
+wpspath="/network/rit/lab/lulab/WRF-GSI/src/WPS"
+lbcpath="/network/rit/lab/lulab/WRF-GSI/src/LBC"
+gsipath="/network/rit/lab/lulab/WRF-GSI/src/GSI"
+source $syspath/env.sh
 
-## Input ##
-obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
-datpath="/network/asrc/scratch/lulab/sw651133/nomads"
-
-## Output ##
-runpath="/network/asrc/scratch/lulab/WRF-GSI-NRT"
-outpath="/network/rit/lab/lulab/WRF-GSI-NRT"
-logpath="$outpath/log"
-
-## Start Date for NRT run ##
-sdate=`sh ${syspath}/get_sdate.bash`
-realtime=1
-
-################################ START of test/retro control ############################
-# Manually override output pathes and sdate for test/retro runs; 
-# Creating mocking data if during LISTOS/or modify accordingly for other input
-  
-runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
-outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
-logpath="$outpath/log"
-sdate="2018080118" #10 digits time at every 6h; +6 hour forecast
 realtime=0
+if [ $realtime -eq 1 ]; then
+   ## Input ##
+   obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
+   datpath="/network/asrc/scratch/lulab/sw651133/nomads"
+   ## Output ##
+   runpath="/network/asrc/scratch/lulab/WRF-GSI-NRT"
+   outpath="/network/rit/lab/lulab/WRF-GSI-NRT"
+   logpath="$outpath/log"
+   ## Start Date for NRT run ##
+   sdate=`sh ${syspath}/get_sdate.bash`
 
-LISTOS=1
-gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
-gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/201808"
-datpath="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata"
-obsdir="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata/logs"
-if [ $LISTOS -eq 1 ]; then
-  sh $syspath/create_mockdata.bash $gfssource $gdassource $datpath $obsdir $sdate $syspath
+elif [ $realtime -eq 0 ]; then
+   ################################START of test/retro control ############################
+   # Manually override output pathes and sdate for test/retro runs; 
+   # Creating mocking data if during LISTOS/or modify accordingly for other input
+   ## Input ##
+   obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
+   datpath="/network/asrc/scratch/lulab/sw651133/nomads"
+   ## Output ##
+   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test"
+   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out"
+   logpath="$outpath/log"
+   first_date="2022032112" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022032112"
+   
+   LISTOS=0
+   if [ $LISTOS -eq 1 ]; then
+     num_metgrid_levels=32
+     gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
+     gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/201808"
+     datpath="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata"
+     obsdir="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata/logs"
+     sh $syspath/create_mockdata.bash $gfssource $gdassource $datpath $obsdir $sdate $syspath
+   fi
+   #################################### END of retro control ################################
 fi
-#################################### END of retro control ################################
 
+## Create folders if it doesn't exist
+if [ ! -d $runpath ]; then
+   mkdir -p $runpath
+fi
+if [ ! -d $outpath ]; then
+   mkdir -p $outpath
+fi
+if [ ! -d $logpath ]; then
+   mkdir -p $logpath
+fi
+
+if [ $realtime -eq 1 ]; then
+   ## In realtime, first_date equals last_date
+   first_date=$sdate
+    last_date=$sdate
+fi
+
+num_metgrid_levels=${num_metgrid_levels:-34}
+
+sdate=$first_date
+while [ $sdate -le $last_date ]
+do
 
 ## End Date and Previous Cycle Date( - 6hr) ##
 edate=`sh ${syspath}/get_edate.bash $sdate`
@@ -81,7 +108,7 @@ else
 fi
 
 ## Create Case ##
-sh $syspath/create_case.bash $datpath $rundir $runpath $syspath $wpspath $wrfpath $lbcpath  $gsipath $sdate $firstrun
+sh $syspath/create_case.bash $datpath $rundir $runpath $syspath $wpspath $wrfpath $lbcpath $gsipath $sdate $firstrun
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
@@ -89,7 +116,7 @@ if [ ${error} -ne 0 ]; then
   exit ${error}
 fi
 sh $syspath/create_namelist.wps.bash $rundir $sdate $edate
-sh $syspath/create_namelist.input.bash $rundir $sdate $edate
+sh $syspath/create_namelist.input.bash $rundir $sdate $edate $num_metgrid_levels
 
 ##### BEGIN SYSTEM #####
 ## GOTO WPS ##
@@ -184,4 +211,10 @@ sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun
 echo "Firstrun is $firstrun" >> $logfile
 echo "Program Complete for $sdate" >> $logfile
 echo "Program Complete for $sdate" 
+
+ndate=`sh ${syspath}/get_ndate.bash $sdate`
+sdate=$ndate
+
+done # End the loop of period
+
 exit
