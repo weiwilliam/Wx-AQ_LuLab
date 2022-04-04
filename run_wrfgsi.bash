@@ -1,5 +1,5 @@
 #!/bin/bash
-#set -x
+set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 
 ##### SETUP SYSTEM ####
@@ -38,17 +38,18 @@ elif [ $realtime -eq 0 ]; then
    runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test"
    outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out"
    logpath="$outpath/log"
-   first_date="2022032112" #10 digits time at every 6h; +6 hour forecast
-    last_date="2022032112"
+   first_date="2018071400" #10 digits time at every 6h; +6 hour forecast
+    last_date="2018071400"
    
-   LISTOS=0
+   LISTOS=1
    if [ $LISTOS -eq 1 ]; then
      num_metgrid_levels=32
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
      gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/201808"
-     datpath="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata"
-     obsdir="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata/logs"
-     sh $syspath/create_mockdata.bash $gfssource $gdassource $datpath $obsdir $sdate $syspath
+     datpath="/network/asrc/scratch/lulab/sw651133/mockdata"
+     obsdir="/network/asrc/scratch/lulab/sw651133/mockdata/logs"
+     [[ ! -d $datpath ]]&& mkdir -p $datpath
+     [[ ! -d  $obsdir ]]&& mkdir -p $obsdir
    fi
    #################################### END of retro control ################################
 fi
@@ -79,6 +80,11 @@ do
 ## End Date and Previous Cycle Date( - 6hr) ##
 edate=`sh ${syspath}/get_edate.bash $sdate`
 pdate=`sh ${syspath}/get_pdate.bash $sdate`
+
+## Create mockdata for LISTOS period experiment
+if [ $LISTOS -eq 1 ]; then
+   sh $syspath/create_mockdata.bash $gfssource $gdassource $datpath $obsdir $sdate $syspath
+fi
 
 ## Create Logfile and sdate dependent variables ##
 logfile="$logpath/wrfgsi.log.$sdate"
