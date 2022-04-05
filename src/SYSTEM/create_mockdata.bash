@@ -1,6 +1,9 @@
 #!/bin/bash
-
+#
+# Create mock data folder for LISTOS period
+#
 #$gfssource $gdassource $datdir $obsdir#logs
+set -x
 
 gfssource=${1}
 gdassource=${2}
@@ -24,8 +27,7 @@ ln -sf $gfssource/gfs.0p25.${ndate}.f000.grib2 gfs.t${ndate:8:2}z.pgrb2.0p25.f00
 gdasdir="$datdir/gdas/gdas.${sdate:0:8}/${sdate:8:2}"
 mkdir -p $gdasdir
 cd $gdasdir
-ln -sf $gdassource/*.${sdate:0:8}.t${sdate:8:2}z.nr gdas.t${sdate:8:2}z.prepbufr.nr
-
+ln -sf $gdassource/prepbufr.gdas.${sdate:0:8}.t${sdate:8:2}z.nr* .
 
 # Fake Logs
 gdasobsscript="cyclelist.gdas_obs.out"

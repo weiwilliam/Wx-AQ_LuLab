@@ -38,14 +38,14 @@ elif [ $realtime -eq 0 ]; then
    runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test"
    outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out"
    logpath="$outpath/log"
-   first_date="2018071400" #10 digits time at every 6h; +6 hour forecast
-    last_date="2018071400"
+   first_date="2018071418" #10 digits time at every 6h; +6 hour forecast
+    last_date="2018071418"
    
    LISTOS=1
    if [ $LISTOS -eq 1 ]; then
      num_metgrid_levels=32
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
-     gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/201808"
+     gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/summer"
      datpath="/network/asrc/scratch/lulab/sw651133/mockdata"
      obsdir="/network/asrc/scratch/lulab/sw651133/mockdata/logs"
      [[ ! -d $datpath ]]&& mkdir -p $datpath
@@ -183,8 +183,9 @@ then
    ## GSI ##
    #gsiwrfoutdir="$outpath/wrfgsi.out.$pdate"
    gsiwrfoutdir="$runpath/wrfgsi.run.$pdate/wrf"
-   ./run_gsi_regional.ksh $sdate $rundir $gsiwrfoutdir > GSI.log  2>&1
-   sh datacheck_gsi.sh
+   sh $syspath/run_gsi_regional_nysm.ksh $sdate $rundir $gsiwrfoutdir $syspath $gsipath #> GSI.log  2>&1
+   #./run_gsi_regional.ksh $sdate $rundir $gsiwrfoutdir $syspath #> GSI.log  2>&1
+   sh $syspath/datacheck_gsi.sh $rundir/gsi
    error=$?
    if [ ${error} -ne 0 ]; then
      echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
@@ -205,14 +206,14 @@ then
    cp $rundir/lbc/wrf_inout wrfinput_d01
 fi
 ## WRF ##
-sh run_wrf.sh $rundir/wrf
-error=$?
-if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
-  exit ${error}
-fi
-## STORE RUN ##
-sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun
+#sh run_wrf.sh $rundir/wrf
+#error=$?
+#if [ ${error} -ne 0 ]; then
+#  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+#  exit ${error}
+#fi
+### STORE RUN ##
+#sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun
 ## CLEAN UP ##
 echo "Firstrun is $firstrun" >> $logfile
 echo "Program Complete for $sdate" >> $logfile

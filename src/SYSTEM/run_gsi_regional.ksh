@@ -1,25 +1,6 @@
 #!/bin/bash
-
-ulimit -s unlimited
-#####################################################
-# machine set up (users should change this part)
-#
-#####################################################
-
 set -x
-#echo $LD_LIBRARY_PATH
-
-#
-# GSIPROC = processor number used for GSI analysis
-#------------------------------------------------
-  GSIPROC=4
-  ARCH='LINUX'
-
-# Supported configurations:
-            # IBM_LSF,
-            # LINUX, LINUX_LSF, LINUX_PBS,
-            # DARWIN_PGI
-#
+ulimit -s unlimited
 #####################################################
 # case set up (users should change this part)
 #####################################################
@@ -33,14 +14,13 @@ set -x
 # GSI_EXE  = path and name of the gsi executable 
 # ENS_ROOT = path where ensemble background files exist
   ANAL_TIME=${1}
-  RUN_NAME=realtime #realtime
-  JOB_DIR=${2}/gsi
-  #/network/asrc/scratch/lulab/sw651133/wrktmp #/network/rit/home/dg771199/WRF-GSI/run/ #src/GSI/run
-     #normally you put run scripts here and submit jobs form here, require a copy of gsi.x at this directory
+  WORK_ROOT=${2}/gsi
   OBS_ROOT=${2}/dat
-  #/network/rit/home/dg771199/WRF-GSI/dat
   BK_ROOT=${3}
-  #/network/rit/home/dg771199/WRF-GSI/src2/wrf
+  SYSPATH=${4}
+  GSIPATH=${5}  # Default path for GSI of wrf-gsi system on Kratos
+  
+  JOBNAME='GSI'
   GSI_ROOT=/network/rit/lab/josephlab/LIN/GSI/comGSIv3.7_EnKFv1.3
   CRTM_ROOT=/network/rit/lab/josephlab/LIN/GSI/CRTM_v2.3.0
   #ENS_ROOT=/network/rit/lab/josephlab/LIN/WORK/GSI/input/gfsens
@@ -49,16 +29,12 @@ set -x
   MM=`echo $ANAL_TIME | cut -c5-6`
   DD=`echo $ANAL_TIME | cut -c7-8`
   HH=`echo $ANAL_TIME | cut -c9-10`
-  GSI_EXE=${JOB_DIR}/gsi.x  #assume you have a copy of gsi.x here
-  WORK_ROOT=${JOB_DIR}/${RUN_NAME}
+  GSI_EXE=${WORK_ROOT}/gsi.x  #assume you have a copy of gsi.x here
+  CATEXEC=${WORK_ROOT}/nc_diag_cat.x
   FIX_ROOT=${GSI_ROOT}/fix
-  JOBNAME=${RUN_NAME}_gsi
-  # hchun: 2021.05.25
-  #GSI_NAMELIST=${GSI_ROOT}/ush/comgsi_namelist.sh.soilTQ
-  GSI_NAMELIST=${JOB_DIR}/comgsi_namelist.sh.soilTQ
-#  PREPBUFR=${OBS_ROOT}/rap.t${HH}z.prepbufr.tm00
+  GSI_NAMELIST=${SYSPATH}/create_gsiparm.anl.bash
   #PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.nr
-  PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.nr
+  PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.nr.nysmsfc
   BK_FILE=${BK_ROOT}/wrfout_d01_${YYYY}-${MM}-${DD}_${HH}:00:00
   JOBSQUEUE="`which squeue` -u ${USER}"
   SQFORMAT="%.10i %.9P %.25j %.8u %.8T %.10M %.10L %.3D %R"
@@ -79,6 +55,7 @@ set -x
   if_observer=No   # Yes, or, No -- case sensitive !
   if_nemsio=No     # Yes, or, No -- case sensitive !
   if_oneob=No      # Yes, or, No -- case sensitive !
+  if_ncdiag=Yes
 
   bk_core=ARW
   bkcv_option=NAM
@@ -90,6 +67,18 @@ set -x
   else
     if_oneobtest='.false.'
   fi
+
+#
+  if [ ${if_ncdiag} = Yes ]; then
+     binary_diag='.false.'
+     netcdf_diag='.true.'
+     DIAG_SUFFIX='.nc4'
+  else
+     binary_diag='.true.'
+     netcdf_diag='.false.'
+     DIAG_SUFFIX=''
+  fi
+
 #
 # setup for GSI 3D/4D EnVar hybrid
   if [ ${if_hybrid} = Yes ] ; then
@@ -134,44 +123,6 @@ set -x
 #
 BYTE_ORDER=Big_Endian
 # BYTE_ORDER=Little_Endian
-
-case $ARCH in
-   'IBM_LSF')
-      ###### IBM LSF (Load Sharing Facility)
-      RUN_COMMAND="mpirun.lsf " ;;
-
-   'LINUX')
-      if [ $GSIPROC = 1 ]; then
-         #### Linux workstation - single processor
-         RUN_COMMAND=""
-      else
-         ###### Linux workstation -  mpi run
-        RUN_COMMAND="/usr/bin/time mpirun -np ${GSIPROC} "
-      fi ;;
-
-   'LINUX_LSF')
-      ###### LINUX LSF (Load Sharing Facility)
-      RUN_COMMAND="mpirun.lsf " ;;
-
-   'LINUX_PBS')
-      #### Linux cluster PBS (Portable Batch System)
-      RUN_COMMAND="mpirun -np ${GSIPROC} " ;;
-
-   'DARWIN_PGI')
-      ### Mac - mpi run
-      if [ $GSIPROC = 1 ]; then
-         #### Mac workstation - single processor
-         RUN_COMMAND=""
-      else
-         ###### Mac workstation -  mpi run
-         RUN_COMMAND="mpirun -np ${GSIPROC} -machinefile ~/mach "
-      fi ;;
-
-   * )
-     print "error: $ARCH is not a supported platform configuration."
-     exit 1 ;;
-esac
-
 
 ##################################################################################
 # Check GSI needed environment variables are defined and exist
@@ -225,48 +176,26 @@ if [ ! -d "${CRTM_ROOT}" ]; then
   exit 1
 fi
 
-
 # Make sure the GSI executable exists
 if [ ! -x "${GSI_EXE}" ]; then
   echo "ERROR: ${GSI_EXE} does not exist!"
   exit 1
 fi
-
-# Check to make sure the number of processors for running GSI was specified
-if [ -z "${GSIPROC}" ]; then
-  echo "ERROR: The variable $GSIPROC must be set to contain the number of processors to run GSI"
-  exit 1
-fi
-
 #
 ##################################################################################
 # Create the ram work directory and cd into it
-
 workdir=${WORK_ROOT}
-echo " Create working directory:" ${workdir}
-
-if [ -d "${workdir}" ]; then
-  rm -rf ${workdir}
-fi
-mkdir -p ${workdir}
 cd ${workdir}
 mkdir crtm_coeffs
 
 #
 ##################################################################################
-
-echo " Copy GSI executable, background file, and link observation bufr to working directory"
-
-# Save a copy of the GSI executable in the workdir
-cp ${GSI_EXE} gsi.x
-
 # Bring over background field (it's modified by GSI so we can't link to it)
 cp ${BK_FILE} ./wrf_inout
 if [ ${if_4DEnVar} = Yes ] ; then
   cp ${BK_FILE_P1} ./wrf_inou3
   cp ${BK_FILE_M1} ./wrf_inou1
 fi
-
 
 # Link to the prepbufr data
 ln -s ${PREPBUFR} ./prepbufr
@@ -399,14 +328,14 @@ else
   fi
 fi
 
+CONVINFO=${GSIPATH}/global_convinfo.txt
 SATANGL=${FIX_ROOT}/global_satangbias.txt
 SATINFO=${FIX_ROOT}/global_satinfo.txt
-#hchun
-CONVINFO=${JOB_DIR}/global_convinfo.txt
-#CONVINFO=/network/rit/home/dg771199/WRF-GSI/src2/gsi/global_convinfo.txt
 OZINFO=${FIX_ROOT}/global_ozinfo.txt
 PCPINFO=${FIX_ROOT}/global_pcpinfo.txt
 LIGHTINFO=${FIX_ROOT}/global_lightinfo.txt
+mesonetuselist=${FIX_ROOT}/nam_mesonet_uselist.txt
+mesonet_stnuselist=${FIX_ROOT}/nam_mesonet_stnuselist.txt
 
 #  copy Fixed fields to working directory
  cp $ANAVINFO anavinfo
@@ -418,6 +347,9 @@ LIGHTINFO=${FIX_ROOT}/global_lightinfo.txt
  cp $PCPINFO  pcpinfo
  cp $LIGHTINFO lightinfo
  cp $OBERROR  errtable
+ cp $mesonetuselist mesonetuselist
+ cp $mesonet_stnuselist mesonet_stnuselist
+
 #
 #    # CRTM Spectral and Transmittance coefficients
 CRTM_ROOT_ORDER=${CRTM_ROOT}/${BYTE_ORDER}
@@ -535,31 +467,20 @@ cat > ./gsirunscript << EOF
 #SBATCH --mem=96000
 #SBATCH --exclusive
 #SBATCH --time=00:15:00
+#SBATCH --output=${workdir}/gsirun.log
 
 ulimit -s unlimited
 $APRUN ${workdir}/gsi.x > stdout 2>&1
 EOF
 
-case $ARCH in
-   'IBM_LSF')
-      ${RUN_COMMAND} ./gsi.x < gsiparm.anl > stdout 2>&1  ;;
-   * )
-#     ${RUN_COMMAND} ./gsi.x > stdout 2>&1  ;;
-#     sbatch -p kratos -N1 --exclusive --mem=64000 --wrap="${RUN_COMMAND} ./gsi.x"
-#     srun "${RUN_COMMAND} /network/rit/lab/josephlab/LIN/GSI/run/gsi.x" ;;
-#sbatch -p kratos-testing -N2 --exclusive --mem=64000 --wrap="/usr/bin/time -p mpirun -np 56 /network/rit/lab/asrclab/wrf/WRFV3/test/em_real/wrf.exe
-#      ${RUN_COMMAND} ./gsi.x > stdout 2>&1 ;;
-#      sbatch --reservation root_1 -p kratos -N1 --exclusive --mem=96000 --wrap="/usr/bin/time mpirun -np 8 /network/rit/lab/asrclab/GSI/run/gsi.x > stdout 2>&1" ;;
-       #sbatch -p kratos -N1 -J ${JOBNAME} --exclusive --mem=96000 --wrap="/usr/bin/time mpirun -np 8 ${JOB_DIR}/gsi.x > stdout 2>&1" ;;
-       sbatch $workdir/gsirunscript ;;
-esac
+sbatch $workdir/gsirunscript
 
 sqrc=0 
 until [ $sqrc -ne 0 ] 
 do   
     $JOBSQUEUE -o "${SQFORMAT}" | grep "$JOBNAME"
     sqrc=$?   
-    sleep 60 
+    sleep 30 
 done
 ##################################################################
 #  run time error check
@@ -597,128 +518,163 @@ ln -s fort.207    fit_rad1.${ANAL_TIME}
 #        write_diag(1)=.true. turns on creation of o-g
 #        innovation files.
 #
+cat > ./gsidiag_runscript << EOF
+#!/bin/bash
+#SBATCH --partition=kratos
+#SBATCH --job-name=${JOBNAME}_diag
+#SBATCH --output=${workdir}/gsidiag.log
+#SBATCH --ntasks=4
+#SBATCH --mem=6000
+#SBATCH --time=00:15:00
+
+set -x
+ulimit -s unlimited
+
+ntype=0
+
+diagtype[0]="conv conv_gps conv_ps conv_pw conv_q conv_sst conv_t conv_tcp conv_uv conv_spd"
+diagtype[1]="pcp_ssmi_dmsp pcp_tmi_trmm"
+diagtype[2]="sbuv2_n16 sbuv2_n17 sbuv2_n18 sbuv2_n19 gome_metop-a gome_metop-b omi_aura mls30_aura ompsnp_npp ompstc8_npp gome_metop-c"
+diagtype[3]="hirs2_n14 msu_n14 sndr_g08 sndr_g11 sndr_g12 sndr_g13 sndr_g08_prep sndr_g11_prep sndr_g12_prep sndr_g13_prep sndrd1_g11 sndrd2_g11 sndrd3_g11 sndrd4_g11 sndrd1_g12 sndrd2_g12 sndrd3_g12 sndrd4_g12 sndrd1_g13 sndrd2_g13 sndrd3_g13 sndrd4_g13 sndrd1_g14 sndrd2_g14 sndrd3_g14 sndrd4_g14 sndrd1_g15 sndrd2_g15 sndrd3_g15 sndrd4_g15 hirs3_n15 hirs3_n16 hirs3_n17 amsua_n15 amsua_n16 amsua_n17 amsub_n15 amsub_n16 amsub_n17 hsb_aqua airs_aqua amsua_aqua imgr_g08 imgr_g11 imgr_g12 imgr_g14 imgr_g15 ssmi_f13 ssmi_f15 hirs4_n18 hirs4_metop-a amsua_n18 amsua_metop-a mhs_n18 mhs_metop-a amsre_low_aqua amsre_mid_aqua amsre_hig_aqua ssmis_f16 ssmis_f17 ssmis_f18 ssmis_f19 ssmis_f20 iasi_metop-a hirs4_n19 amsua_n19 mhs_n19 seviri_m08 seviri_m09 seviri_m10 seviri_m11 cris_npp cris-fsr_npp cris-fsr_n20 atms_npp atms_n20 hirs4_metop-b amsua_metop-b mhs_metop-b iasi_metop-b avhrr_metop-b avhrr_n18 avhrr_n19 avhrr_metop-a amsr2_gcom-w1 gmi_gpm saphir_meghat ahi_himawari8 abi_g16 abi_g17 amsua_metop-c mhs_metop-c iasi_metop-c avhrr_metop-c"
+
+numfile[0]=0
+numfile[1]=0
+numfile[2]=0
+numfile[3]=0
+
+prefix="pe*"
 
 loops="01 03"
-for loop in $loops; do
-
-case $loop in
+for loop in \$loops; do
+case \$loop in
   01) string=ges;;
   03) string=anl;;
-   *) string=$loop;;
+   *) string=\$loop;;
 esac
-
-#  Collect diagnostic files for obs types (groups) below
-#   listall="conv amsua_metop-a mhs_metop-a hirs4_metop-a hirs2_n14 msu_n14 \
-#          sndr_g08 sndr_g10 sndr_g12 sndr_g08_prep sndr_g10_prep sndr_g12_prep \
-#          sndrd1_g08 sndrd2_g08 sndrd3_g08 sndrd4_g08 sndrd1_g10 sndrd2_g10 \
-#          sndrd3_g10 sndrd4_g10 sndrd1_g12 sndrd2_g12 sndrd3_g12 sndrd4_g12 \
-#          hirs3_n15 hirs3_n16 hirs3_n17 amsua_n15 amsua_n16 amsua_n17 \
-#          amsub_n15 amsub_n16 amsub_n17 hsb_aqua airs_aqua amsua_aqua \
-#          goes_img_g08 goes_img_g10 goes_img_g11 goes_img_g12 \
-#          pcp_ssmi_dmsp pcp_tmi_trmm sbuv2_n16 sbuv2_n17 sbuv2_n18 \
-#          omi_aura ssmi_f13 ssmi_f14 ssmi_f15 hirs4_n18 amsua_n18 mhs_n18 \
-#          amsre_low_aqua amsre_mid_aqua amsre_hig_aqua ssmis_las_f16 \
-#          ssmis_uas_f16 ssmis_img_f16 ssmis_env_f16 mhs_metop_b \
-#          hirs4_metop_b hirs4_n19 amusa_n19 mhs_n19 goes_glm_16"
-# listall=`ls pe* | cut -f2 -d"." | awk '{print substr($0, 0, length($0)-3)}' | sort | uniq `
- listall="conv light"
-   for type in $listall; do
-      count=`ls pe*${type}_${loop}* | wc -l`
-      if [[ $count -gt 0 ]]; then
-         cat pe*${type}_${loop}* > diag_${type}_${string}.${ANAL_TIME}
-      fi
+   echo \$(date) START loop \$string >&2
+   n=-1
+   while [ \$((n+=1)) -le \$ntype ] ;do
+      for type in \$(echo \${diagtype[n]}); do
+         count=\$(ls \${prefix}\${type}_\${loop}* 2>/dev/null | wc -l)
+         if [ \$count -gt 1 ]; then
+            if [ $binary_diag = ".true." ]; then
+               cat \${prefix}\${type}_\${loop}* > diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX}
+            else
+               $MPIRUN $CATEXEC -o diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX} \${prefix}\${type}_\${loop}*
+            fi
+            numfile[n]=\$(expr \${numfile[n]} + 1)
+         elif [ \$count -eq 1 ]; then
+            cat \${prefix}\${type}_\${loop}* > diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX}
+            numfile[n]=\$(expr \${numfile[n]} + 1)
+         fi
+         #if [ -s \$tmpdir/diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX} ]; then
+         #   mv \$tmpdir/diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX} \$outdir
+         #fi
+      done
    done
+   echo \$(date) END loop \$string >&2
+done
+EOF
+
+sbatch $workdir/gsidiag_runscript
+
+sqrc=0 
+until [ $sqrc -ne 0 ] 
+do   
+    $JOBSQUEUE -o "${SQFORMAT}" | grep "${JOBNAME}_diag"
+    sqrc=$?   
+    sleep 10 
 done
 
 #  Clean working directory to save only important files 
-ls -l * > list_run_directory
-if [[ ${if_clean} = clean  &&  ${if_observer} != Yes ]]; then
-  echo ' Clean working directory after GSI run'
-  rm -f *Coeff.bin     # all CRTM coefficient files
-  rm -f pe0*           # diag files on each processor
-  rm -f obs_input.*    # observation middle files
-  rm -f siganl sigf0?  # background middle files
-  rm -f fsize_*        # delete temperal file for bufr size
-fi
+#ls -l * > list_run_directory
+#if [[ ${if_clean} = clean  &&  ${if_observer} != Yes ]]; then
+#  echo ' Clean working directory after GSI run'
+#  rm -f *Coeff.bin     # all CRTM coefficient files
+#  rm -f pe0*           # diag files on each processor
+#  rm -f obs_input.*    # observation middle files
+#  rm -f siganl sigf0?  # background middle files
+#  rm -f fsize_*        # delete temperal file for bufr size
+#fi
 #
 #
 #################################################
 # start to calculate diag files for each member
 #################################################
 #
-if [ ${if_observer} = Yes ] ; then
-  string=ges
-  for type in $listall; do
-    count=0
-    if [[ -f diag_${type}_${string}.${ANAL_TIME} ]]; then
-       mv diag_${type}_${string}.${ANAL_TIME} diag_${type}_${string}.ensmean
-    fi
-  done
-  mv wrf_inout wrf_inout_ensmean
-
-# Build the GSI namelist on-the-fly for each member
-  nummiter=0
-  if_read_obs_save='.false.'
-  if_read_obs_skip='.true.'
-. $GSI_NAMELIST
-
-# Loop through each member
-  loop="01"
-  ensmem=1
-  while [[ $ensmem -le $no_member ]];do
-
-     rm pe0*
-
-     print "\$ensmem is $ensmem"
-     ensmemid=`printf %3.3i $ensmem`
-
-# get new background for each member
-     if [[ -f wrf_inout ]]; then
-       rm wrf_inout
-     fi
-
-     BK_FILE=${BK_FILE_mem}${ensmemid}
-     echo $BK_FILE
-     ln -s $BK_FILE wrf_inout
-
-#  run  GSI
-     echo ' Run GSI with' ${bk_core} 'for member ', ${ensmemid}
-
-     case $ARCH in
-        'IBM_LSF')
-           ${RUN_COMMAND} ./gsi.x < gsiparm.anl > stdout_mem${ensmemid} 2>&1  ;;
-
-        * )
-#          ${RUN_COMMAND} ./gsi.x > stdout_mem${ensmemid} 2>&1 ;;
-#      sbatch --reservation root_1 -p kratos -N1 --exclusive --mem=96000 --wrap="/usr/bin/time mpirun -np 8 /network/rit/lab/asrclab/GSI/run/gsi.x > stdout 2>&1" ;;
-       sbatch -p kratos -N1 --exclusive --mem=96000 --wrap="/usr/bin/time mpirun -np 8 ${JOB_DIR}/gsi.x > stdout 2>&1" ;;
-     esac
-
-
-#  run time error check and save run time file status
-     error=$?
-
-     if [ ${error} -ne 0 ]; then
-       echo "ERROR: ${GSI} crashed for member ${ensmemid} Exit status=${error}"
-       exit ${error}
-     fi
-
-     ls -l * > list_run_directory_mem${ensmemid}
-
-# generate diag files
-
-     for type in $listall; do
-           count=`ls pe*${type}_${loop}* | wc -l`
-        if [[ $count -gt 0 ]]; then
-           cat pe*${type}_${loop}* > diag_${type}_${string}.mem${ensmemid}
-        fi
-     done
-
-# next member
-     (( ensmem += 1 ))
-      
-  done
-
-fi
+#if [ ${if_observer} = Yes ] ; then
+#  string=ges
+#  for type in $listall; do
+#    count=0
+#    if [[ -f diag_${type}_${string}.${ANAL_TIME} ]]; then
+#       mv diag_${type}_${string}.${ANAL_TIME} diag_${type}_${string}.ensmean
+#    fi
+#  done
+#  mv wrf_inout wrf_inout_ensmean
+#
+## Build the GSI namelist on-the-fly for each member
+#  nummiter=0
+#  if_read_obs_save='.false.'
+#  if_read_obs_skip='.true.'
+#. $GSI_NAMELIST
+#
+## Loop through each member
+#  loop="01"
+#  ensmem=1
+#  while [[ $ensmem -le $no_member ]];do
+#
+#     rm pe0*
+#
+#     print "\$ensmem is $ensmem"
+#     ensmemid=`printf %3.3i $ensmem`
+#
+## get new background for each member
+#     if [[ -f wrf_inout ]]; then
+#       rm wrf_inout
+#     fi
+#
+#     BK_FILE=${BK_FILE_mem}${ensmemid}
+#     echo $BK_FILE
+#     ln -s $BK_FILE wrf_inout
+#
+##  run  GSI
+#     echo ' Run GSI with' ${bk_core} 'for member ', ${ensmemid}
+#
+#     case $ARCH in
+#        'IBM_LSF')
+#           ${RUN_COMMAND} ./gsi.x < gsiparm.anl > stdout_mem${ensmemid} 2>&1  ;;
+#
+#        * )
+##          ${RUN_COMMAND} ./gsi.x > stdout_mem${ensmemid} 2>&1 ;;
+##      sbatch --reservation root_1 -p kratos -N1 --exclusive --mem=96000 --wrap="/usr/bin/time mpirun -np 8 /network/rit/lab/asrclab/GSI/run/gsi.x > stdout 2>&1" ;;
+#       sbatch -p kratos -N1 --exclusive --mem=96000 --wrap="/usr/bin/time mpirun -np 8 ${JOB_DIR}/gsi.x > stdout 2>&1" ;;
+#     esac
+#
+#
+##  run time error check and save run time file status
+#     error=$?
+#
+#     if [ ${error} -ne 0 ]; then
+#       echo "ERROR: ${GSI} crashed for member ${ensmemid} Exit status=${error}"
+#       exit ${error}
+#     fi
+#
+#     ls -l * > list_run_directory_mem${ensmemid}
+#
+## generate diag files
+#
+#     for type in $listall; do
+#           count=`ls pe*${type}_${loop}* | wc -l`
+#        if [[ $count -gt 0 ]]; then
+#           cat pe*${type}_${loop}* > diag_${type}_${string}.mem${ensmemid}
+#        fi
+#     done
+#
+## next member
+#     (( ensmem += 1 ))
+#      
+#  done
+#
+#fi
 
 exit 0
