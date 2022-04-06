@@ -62,13 +62,8 @@ ln -sf $syspath/run_wrf.sh run_wrf.sh
 
 #GSI
 cd $rundir/gsi
-#mkdir realtime
 cp $gsipath/gsi.x .
-cp /network/rit/lab/josephlab/LIN/GSI/build/bin/nc_diag_cat.x .
-#ln -sf $gsipath/comgsi_namelist.sh.soilTQ .
-#ln -sf $gsipath/global_convinfo.txt .
-#ln -sf $syspath/run_gsi_regional.ksh .
-#ln -sf $syspath/datacheck_gsi.sh .
+cp $gsipath/nc_diag_cat.x .
 
 #LBC
 cd $rundir/lbc
