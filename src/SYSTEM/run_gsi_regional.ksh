@@ -330,7 +330,7 @@ fi
 
 # Setup the needed info table for GSI
 #CONVINFO=${GSIPATH}/global_convinfo.txt
-CONVINFO=/network/rit/home/sw651133/develop/global_convinfo_nysmsfc.txt
+CONVINFO=${GSIPATH}/global_convinfo_nysmsfc.txt
 SATANGL=${FIX_ROOT}/global_satangbias.txt
 SATINFO=${FIX_ROOT}/global_satinfo.txt
 OZINFO=${FIX_ROOT}/global_ozinfo.txt
