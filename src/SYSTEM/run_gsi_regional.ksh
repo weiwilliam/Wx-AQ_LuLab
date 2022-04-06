@@ -328,7 +328,9 @@ else
   fi
 fi
 
-CONVINFO=${GSIPATH}/global_convinfo.txt
+# Setup the needed info table for GSI
+#CONVINFO=${GSIPATH}/global_convinfo.txt
+CONVINFO=/network/rit/home/sw651133/develop/global_convinfo_nysmsfc.txt
 SATANGL=${FIX_ROOT}/global_satangbias.txt
 SATINFO=${FIX_ROOT}/global_satinfo.txt
 OZINFO=${FIX_ROOT}/global_ozinfo.txt
@@ -495,8 +497,6 @@ fi
 #
 ##################################################################
 #
-#   GSI updating satbias_in
-#
 # GSI updating satbias_in (only for cycling assimilation)
 
 # Copy the output to more understandable names
@@ -588,14 +588,14 @@ done
 
 #  Clean working directory to save only important files 
 #ls -l * > list_run_directory
-#if [[ ${if_clean} = clean  &&  ${if_observer} != Yes ]]; then
-#  echo ' Clean working directory after GSI run'
-#  rm -f *Coeff.bin     # all CRTM coefficient files
-#  rm -f pe0*           # diag files on each processor
-#  rm -f obs_input.*    # observation middle files
-#  rm -f siganl sigf0?  # background middle files
-#  rm -f fsize_*        # delete temperal file for bufr size
-#fi
+if [[ ${if_clean} = clean  &&  ${if_observer} != Yes ]]; then
+  echo ' Clean working directory after GSI run'
+  #rm -f *Coeff.bin     # all CRTM coefficient files
+  rm -f pe0*           # diag files on each processor
+  rm -f obs_input.*    # observation middle files
+  rm -f siganl sigf0?  # background middle files
+  rm -f fsize_*        # delete temperal file for bufr size
+fi
 #
 #
 #################################################

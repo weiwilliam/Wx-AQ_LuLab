@@ -183,8 +183,7 @@ then
    ## GSI ##
    #gsiwrfoutdir="$outpath/wrfgsi.out.$pdate"
    gsiwrfoutdir="$runpath/wrfgsi.run.$pdate/wrf"
-   sh $syspath/run_gsi_regional_nysm.ksh $sdate $rundir $gsiwrfoutdir $syspath $gsipath #> GSI.log  2>&1
-   #./run_gsi_regional.ksh $sdate $rundir $gsiwrfoutdir $syspath #> GSI.log  2>&1
+   sh $syspath/run_gsi_regional.ksh $sdate $rundir $gsiwrfoutdir $syspath $gsipath > GSI.log  2>&1
    sh $syspath/datacheck_gsi.sh $rundir/gsi
    error=$?
    if [ ${error} -ne 0 ]; then
@@ -206,14 +205,14 @@ then
    cp $rundir/lbc/wrf_inout wrfinput_d01
 fi
 ## WRF ##
-#sh run_wrf.sh $rundir/wrf
-#error=$?
-#if [ ${error} -ne 0 ]; then
-#  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
-#  exit ${error}
-#fi
+sh run_wrf.sh $rundir/wrf
+error=$?
+if [ ${error} -ne 0 ]; then
+  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+  exit ${error}
+fi
 ### STORE RUN ##
-#sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun
+sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun
 ## CLEAN UP ##
 echo "Firstrun is $firstrun" >> $logfile
 echo "Program Complete for $sdate" >> $logfile
