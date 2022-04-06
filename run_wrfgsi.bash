@@ -4,16 +4,19 @@
 
 ##### SETUP SYSTEM ####
 ## Set Environment ##
+
 topdir="/network/rit/lab/lulab/WRF-GSI"
 srcpath="$topdir/src"
-syspath="$srcpath/SYSTEM"
-wrfpath="$srcpath/WRF"
-wpspath="$srcpath/WPS"
+syspath="/network/rit/home/hl682259/Realtime/Wx-AQ/src/SYSTEM"
+#wrfpath="$srcpath/WRF"
+#wpspath="$srcpath/WPS"
 lbcpath="$srcpath/LBC"
 gsipath="$srcpath/GSI"
+wrfpath="/network/rit/lab/lulab/share_lib/WRF/WRF_TEST/WRF/run"
+wpspath="/network/rit/lab/lulab/share_lib/WRF/WRF_TEST/WPS"
 source $syspath/env.sh
 # A clean alternative WRF installation tested
-# wrfpath="/network/rit/lab/lulab/hluo/WRF43/WRF43/run"
+#wrfpath="/network/rit/lab/lulab/hluo/WRF43/WRF43/run"
 
 ## Input ##
 obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
@@ -28,6 +31,7 @@ logpath="$outpath/log"
 sdate=`sh ${syspath}/get_sdate.bash`
 realtime=1
 
+chem_opt=1
 ################################ START of test/retro control ############################
 # Manually override output pathes and sdate for test/retro runs; 
 # Creating mocking data if during LISTOS/or modify accordingly for other input
@@ -35,7 +39,7 @@ realtime=1
 runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
 outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
 logpath="$outpath/log"
-sdate="2018080118" #10 digits time at every 6h; +6 hour forecast
+sdate="2018080500" #10 digits time at every 6h; +6 hour forecast
 realtime=0
 
 LISTOS=1
@@ -56,6 +60,8 @@ pdate=`sh ${syspath}/get_pdate.bash $sdate`
 ## Create Logfile and sdate dependent variables ##
 logfile="$logpath/wrfgsi.log.$sdate"
 echo "Case  $sdate" 
+echo "Start time:"
+date
 echo "$sdate" > $logfile
 rundir="$runpath/wrfgsi.run.$sdate"
 datdir="$rundir/dat"
@@ -88,8 +94,8 @@ if [ ${error} -ne 0 ]; then
   echo "Run directory already exists by create_case.bash. Remove/rename previous run directory to restart." >> $logfile
   exit ${error}
 fi
-sh $syspath/create_namelist.wps.bash $rundir $sdate $edate
-sh $syspath/create_namelist.input.bash $rundir $sdate $edate
+sh $syspath/create_namelist.wps.bash $rundir $sdate $edate $wpspath
+sh $syspath/create_namelist.inputchem0.bash $rundir $sdate $edate
 
 ##### BEGIN SYSTEM #####
 ## GOTO WPS ##
@@ -121,6 +127,10 @@ if [ ${error} -ne 0 ]; then
   exit ${error}
 fi
 
+echo "WPS finish time:"
+date
+
+
 ## GOTO WRF ##
 cd $rundir/wrf
 ## REAL ##
@@ -131,6 +141,9 @@ if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
   exit ${error}
 fi
+
+echo "Real finish time:"
+date
 
 ## GDAS DATA CHECK ##
 if [ $firstrun -eq 0 ] ## Not first run of cycled system.
@@ -171,6 +184,12 @@ then
    mv wrfinput_d01 wrfinput_d01.real
    cp $rundir/lbc/wrf_inout wrfinput_d01
 fi
+
+## WRF/Chem input if chem_opt==1 ##
+if [ $chem_opt -eq 1 ]; then
+  sh $syspath/create_emi.bash $rundir $syspath $sdate $edate 
+fi
+
 ## WRF ##
 sh run_wrf.sh $rundir/wrf
 error=$?

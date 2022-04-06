@@ -1,0 +1,33 @@
+#!/bin/bash
+
+rundir=${1}
+syspath=${2}
+sdate=${3}
+edate=${4}
+
+
+## mozbc to prepapre BC if using MOZART chem option
+mkdir $rundir/emi/mozbc
+cd $rundir/emi/mozbc
+
+# temp data for LISTOS test
+ln -sf /network/rit/lab/lulab/chinan/WRF/DATA/BCIC/CHEM_IC/h0001.nc h0001.nc
+cp $rundir/wps/met_em* .
+cp $rundir/wrf/wrfin* .
+cp $rundir/wrf/wrfbdy* .
+
+ln -sf /network/rit/lab/lulab/WRF-GSI/src/EMI/MOZBC/* .
+ln -sf $syspath/create_emiinp_mozbc.bash .
+ln -sf $syspath/run_emi_mozbc.sh .
+
+do_bc=.true.
+domain=1
+sh create_emiinp_mozbc.bash $rundir $do_bc $domain
+sh run_emi_mozbc.sh .
+
+do_bc=.false.
+domain=2
+sh create_emiinp_mozbc.bash $rundir $do_bc $domain
+sh run_emi_mozbc.sh .
+
+

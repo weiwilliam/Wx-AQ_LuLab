@@ -124,4 +124,9 @@ cat << EOF > $fileo
 
  &grib2
  /
+ 
+ & chem
+ chem_opt                            = 0, 0,
+ /  
+
 EOF
