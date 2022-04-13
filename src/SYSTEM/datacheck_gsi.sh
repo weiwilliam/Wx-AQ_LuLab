@@ -16,7 +16,7 @@ do
     count=$((count+1))
     if [ $count -eq $stopcount ]
     then
-       echo Error: Timeout ${JOBNAME}
+       echo Error: Timeout ${JOBNAME}.
        exit 6 #use different nonzero number for each script
     fi
 done

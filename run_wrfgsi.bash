@@ -2,22 +2,27 @@
 
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 
-##### SETUP SYSTEM ####
-## Set Environment ##
+#################################### SETUP SYSTEM ######################################
 
 topdir="/network/rit/lab/lulab/WRF-GSI"
 srcpath="$topdir/src"
-syspath="/network/rit/home/hl682259/Realtime/Wx-AQ/src/SYSTEM"
 #wrfpath="$srcpath/WRF"
 #wpspath="$srcpath/WPS"
 lbcpath="$srcpath/LBC"
 gsipath="$srcpath/GSI"
 wrfpath="/network/rit/lab/lulab/share_lib/WRF/WRF_TEST/WRF/run"
 wpspath="/network/rit/lab/lulab/share_lib/WRF/WRF_TEST/WPS"
-source $syspath/env.sh
-# A clean alternative WRF installation tested
 #wrfpath="/network/rit/lab/lulab/hluo/WRF43/WRF43/run"
 
+# change syspath to your local path
+syspath="/network/rit/home/hl682259/Realtime/Wx-AQ/src/SYSTEM"
+source $syspath/env.sh
+
+# WRF/Chem choice
+chem_opt=114
+
+
+########################### NRT/RETRO DATE AND IN/OUT DATA PATH SETTINS #################
 ## Input ##
 obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
 datpath="/network/asrc/scratch/lulab/sw651133/nomads"
@@ -31,15 +36,14 @@ logpath="$outpath/log"
 sdate=`sh ${syspath}/get_sdate.bash`
 realtime=1
 
-chem_opt=1
-################################ START of test/retro control ############################
+# START of test/retro control #############
 # Manually override output pathes and sdate for test/retro runs; 
 # Creating mocking data if during LISTOS/or modify accordingly for other input
   
 runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
 outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
 logpath="$outpath/log"
-sdate="2018080500" #10 digits time at every 6h; +6 hour forecast
+sdate="2018080612" #10 digits time at every 6h; +6 hour forecast
 realtime=0
 
 LISTOS=1
@@ -50,12 +54,14 @@ obsdir="/network/asrc/scratch/lulab/WRF-GSI-CASE/mockdata/logs"
 if [ $LISTOS -eq 1 ]; then
   sh $syspath/create_mockdata.bash $gfssource $gdassource $datpath $obsdir $sdate $syspath
 fi
-#################################### END of retro control ################################
+# END of retro control################
 
+################################# PROGRAM START ##########################################
 
 ## End Date and Previous Cycle Date( - 6hr) ##
 edate=`sh ${syspath}/get_edate.bash $sdate`
 pdate=`sh ${syspath}/get_pdate.bash $sdate`
+
 
 ## Create Logfile and sdate dependent variables ##
 logfile="$logpath/wrfgsi.log.$sdate"
@@ -63,7 +69,7 @@ echo "Case  $sdate"
 echo "Start time:"
 date
 echo "$sdate" > $logfile
-rundir="$runpath/wrfgsi.run.$sdate"
+rundir="$runpath/$sdate"
 datdir="$rundir/dat"
 outdir="$outpath/wrfgsi.out.$sdate"
 
@@ -71,8 +77,8 @@ outdir="$outpath/wrfgsi.out.$sdate"
 sh $syspath/datacheck_gfs.sh $obsdir $sdate $realtime
 error=$?
 if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
-  echo "GFS files not found by datacheck_gfs.sh" >> $logfile
+  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+  echo "GFS data not found by datacheck_gfs.sh." >> $logfile
   exit ${error}
 fi
 
@@ -90,12 +96,12 @@ fi
 sh $syspath/create_case.bash $datpath $rundir $runpath $syspath $wpspath $wrfpath $lbcpath  $gsipath $sdate $firstrun
 error=$?
 if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
-  echo "Run directory already exists by create_case.bash. Remove/rename previous run directory to restart." >> $logfile
+  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+  echo "Run directory already exists. See details in create_case.bash." >> $logfile
   exit ${error}
 fi
 sh $syspath/create_namelist.wps.bash $rundir $sdate $edate $wpspath
-sh $syspath/create_namelist.inputchem0.bash $rundir $sdate $edate
+sh $syspath/create_namelist.input.bash $rundir $sdate $edate 0
 
 ##### BEGIN SYSTEM #####
 ## GOTO WPS ##
@@ -106,8 +112,8 @@ then
   sh run_geogrid.sh $rundir/wps 
   error=$?
   if [ ${error} -ne 0 ]; then
-    echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
-    echo "Run directory already exists by create_c." >> $logfile
+    echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+    echo "Unsuccessful run of geogrid.exe." >> $logfile
     exit ${error}
   fi
 fi
@@ -116,14 +122,16 @@ fi
 sh run_ungrib.sh $rundir/wps
 error=$?
 if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+  echo "Unsuccessful run of ungrib.exe." >> $logfile
   exit ${error}
 fi
 ## METGRID ##
 sh run_metgrid.sh $rundir/wps
 error=$?
 if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+  echo "Unsuccessful run of metgrid.exe." >> $logfile  
   exit ${error}
 fi
 
@@ -138,7 +146,8 @@ ln -sf $rundir/wps/met_em.d0* .
 sh run_real.sh $rundir/wrf
 error=$?
 if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+  echo "Unsuccessful run of real.exe." >> $logfile  
   exit ${error}
 fi
 
@@ -151,7 +160,7 @@ then
    sh $syspath/datacheck_gdas.sh $obsdir $sdate
    error=$?
    if [ ${error} -ne 0 ]; then
-      echo "WARNING: GDAS data not found. Thus, $sdate is now the FIRST CYCLE" >> $logfile
+      echo "WARNING: GDAS data not found. Thus, $sdate is now the FIRST CYCLE." >> $logfile
       firstrun=1
    fi
 fi
@@ -162,12 +171,13 @@ then
    #GSI with 6 hour wrfout + data from pdate
    ## GSI ##
    #gsiwrfoutdir="$outpath/wrfgsi.out.$pdate"
-   gsiwrfoutdir="$runpath/wrfgsi.run.$pdate/wrf"
+   gsiwrfoutdir="$runpath/$pdate/wrf"
    ./run_gsi_regional.ksh $sdate $rundir $gsiwrfoutdir > GSI.log  2>&1
    sh datacheck_gsi.sh
    error=$?
    if [ ${error} -ne 0 ]; then
-     echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+     echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+     echo "Unsuccessful run of real.exe." >> $logfile     
      exit ${error}
    fi
    ## GOTO LBC ##
@@ -176,7 +186,8 @@ then
    sh run_lbc.sh $rundir
    error=$?
    if [ ${error} -ne 0 ]; then
-     echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+     echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+     echo "Unsuccessful run of da_update_bc.exe." >> $logfile     
      exit ${error}
    fi
    ## GOBACKTO WRF ##
@@ -185,16 +196,17 @@ then
    cp $rundir/lbc/wrf_inout wrfinput_d01
 fi
 
-## WRF/Chem input if chem_opt==1 ##
-if [ $chem_opt -eq 1 ]; then
-  sh $syspath/create_emi.bash $rundir $syspath $sdate $edate 
+## WRF/Chem input prep if chem_opt is not 0 ##
+if [ $chem_opt -ne 0 ]; then
+  sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $chem_opt
 fi
 
 ## WRF ##
 sh run_wrf.sh $rundir/wrf
 error=$?
 if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}" >> $logfile
+  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+  echo "Unsuccessful run of wrf.exe." >> $logfile  
   exit ${error}
 fi
 ## STORE RUN ##

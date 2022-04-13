@@ -33,3 +33,21 @@ do
     sleep 30
 done
 
+CKFILE="filelist"
+sqrc=1
+count=0
+stopcount=10
+until [ $sqrc -ne 1 ]
+do
+    ls ./ > ${CKFILE}
+    grep -qi "wrfbiochemi_d02" ${CKFILE} 
+    sqrc=$?
+    sleep 20
+    count=$((count+1))
+    if [ $count -eq $stopcount ]
+    then
+       echo Error: Timeout ${JOBNAME}.
+       exit 20 #use different nonzero number for each script
+    fi
+done
+

@@ -14,7 +14,7 @@ do
     sqrc=$?
     if [ $sqrc -ne 1 ]
     then
-        echo "Data not found"
+        echo "Warning: GDAS data failed."
         exit 13
     fi
     grep -qi "$sdate Succeed" ${CKFILE} 
@@ -23,7 +23,7 @@ do
     count=$((count+1))
     if [ $count -eq $stopcount ]
     then
-       echo "Timeout"
+       echo "Warning: GDAS data timeout."
        exit 12 #use different nonzero number for each script
     fi
 done

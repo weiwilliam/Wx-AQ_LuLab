@@ -21,7 +21,7 @@ cat > ./${SCRIPTNAME} << EOF
 ulimit -s unlimited
 export WRFIO_NCD_LARGE_FILE_SUPPORT=1
 
-$APRUN ${1}/${EXE} < ${INP} > ${JOBNAME}.log 2>&1
+$APRUN ${1}/${EXE} < ${INP} > ${CKFILE} 2>&1
 EOF
 
 sbatch ${1}/${SCRIPTNAME}
@@ -34,4 +34,12 @@ do
     sqrc=$?
     sleep 30
 done
+
+grep -i "successful" $CKFILE >> ${JOBNAME}.log
+ckrc=$?
+if [ $ckrc -eq 1 ]
+then
+   echo Error: Unsuccessfuly run of ${JOBNAME}.
+   exit 24
+fi
 

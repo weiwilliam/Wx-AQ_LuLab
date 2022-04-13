@@ -9,6 +9,7 @@ eyear=${3:0:4}
 emon=${3:4:2}
 eday=${3:6:2}
 ehr=${3:8:2}
+chemopt=${4}
 
 if [ $shr -eq 00 ]
 then
@@ -158,8 +159,9 @@ cat << EOF > $fileo
  nio_groups = 1,
  /
 
+ 
  & chem
- chem_opt                            = 0,  0,   112,
+ chem_opt                            = $chemopt, $chemopt,   112,
  kemit                               = 10,
  bioemdt                             = 2,      2,    2,
  photdt                              = 30,     30,   30,

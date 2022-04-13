@@ -14,7 +14,7 @@ do
     sqrc=$?
     if [ $sqrc -ne 1 ]
     then
-        echo "Error: GFS Data Failed."
+        echo "Error: GFS data failed."
         exit 11
     fi
     
@@ -24,7 +24,7 @@ do
     count=$((count+1))
     if [ $count -eq $stopcount ]
     then
-       echo "Error: GFS Data Not Found."
+       echo "Error: GFS data not found."
        exit 10 #use different nonzero number for each script
     fi
 done
