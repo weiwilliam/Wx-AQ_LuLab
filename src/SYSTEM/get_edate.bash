@@ -20,10 +20,10 @@ then
   eday=`date -d "$datein +36 hours" -u +%d`
   ehr=`date -d "$datein +36 hours" -u +%H`
 else
-  eyr=`date -d "$datein +6 hours" -u +%Y`
-  emon=`date -d "$datein +6 hours" -u +%m`
-  eday=`date -d "$datein +6 hours" -u +%d`
-  ehr=`date -d "$datein +6 hours" -u +%H`
+  eyr=`date -d "$datein +12 hours" -u +%Y`
+  emon=`date -d "$datein +12 hours" -u +%m`
+  eday=`date -d "$datein +12 hours" -u +%d`
+  ehr=`date -d "$datein +12 hours" -u +%H`
 fi
 
 echo $eyr$emon$eday$ehr

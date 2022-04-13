@@ -49,7 +49,7 @@ then
   ln -sf $syspath/run_geogrid.sh run_geogrid.sh
 else
   pdate=`sh ${syspath}/get_pdate.bash $sdate`
-  cp -f $runpath/wrfgsi.run.$pdate/wps/geo_em.* . 
+  cp -f $runpath/$pdate/wps/geo_em.* . 
 fi
 ln -sf $syspath/run_ungrib.sh run_ungrib.sh
 ln -sf $syspath/run_metgrid.sh run_metgrid.sh

@@ -9,13 +9,11 @@ eyear=${3:0:4}
 emon=${3:4:2}
 eday=${3:6:2}
 ehr=${3:8:2}
-num_metgrid_levels=${4}
-chemopt=${5}
+chemopt=${4}
 
 if [ $shr -eq 00 ]
 then
-   # Update the rhr with other variables in run_wrfgsi.bash
-   rhr=6
+   rhr=36
 else
    rhr=6
 fi
@@ -71,7 +69,7 @@ cat << EOF > $fileo
  e_sn                                = 220,   223,   349,
  e_vert                              = 50,     50,    50,
  p_top_requested                     = 5000,
- num_metgrid_levels                  = ${num_metgrid_levels},
+ num_metgrid_levels                  = 32,
  num_metgrid_soil_levels             = 4,
  dx                                  = 12000, 4000,  1333.33,
  dy                                  = 12000, 4000,  1333.33,
