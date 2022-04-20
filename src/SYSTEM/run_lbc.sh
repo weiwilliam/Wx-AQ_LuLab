@@ -15,7 +15,7 @@ rundir=${1}
 cd $rundir/lbc
 mv $rundir/wrf/wrfbdy_d01 .
 cp -f wrfbdy_d01 wrfbdy_d01.bu
-cp -f $rundir/gsi/realtime/wrf_inout .
+cp -f $rundir/gsi/wrf_inout .
 
 
 cat > ./${SCRIPTNAME} << EOF
@@ -46,7 +46,7 @@ grep -i "Successful" $CKFILE >> ${JOBNAME}.log
 ckrc=$?
 if [ $ckrc -eq 1 ]
 then
-    echo Error: Unsuccessfuly run of ${JOBNAME}
+    echo Error: Unsuccessfuly run of ${JOBNAME}.
     exit 7
 fi
 

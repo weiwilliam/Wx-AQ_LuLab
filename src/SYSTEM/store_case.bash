@@ -26,18 +26,18 @@ cp -f $rundir/wrf/namelist.input $outdir/.
 if [ $firstrun -eq 0 ]
 then
   #GSI
-  cp -f $rundir/gsi/run_gsi_regional.ksh $outdir/.
+  #cp -f $rundir/gsi/run_gsi_regional.ksh $outdir/.
   cp -f $rundir/gsi/GSI.log $outdir/.
-  cp -f $rundir/gsi/comgsi_namelist.sh.soilTQ $outdir/.
-  cp -f $rundir/gsi/realtime/wrf_inout $outdir/.
-  cp -f $rundir/gsi/realtime/stdout $outdir/.
-  cp -f $rundir/gsi/realtime/diag_* $outdir/.
-  cp -f $rundir/gsi/realtime/gsiparm.anl $outdir/.
-  cp -f $rundir/gsi/realtime/fort.201 $outdir/.
-  cp -f $rundir/gsi/realtime/fort.202 $outdir/.
-  cp -f $rundir/gsi/realtime/fort.203 $outdir/.
-  cp -f $rundir/gsi/realtime/fort.213 $outdir/.
-  cp -f $rundir/gsi/realtime/fort.220 $outdir/.
+  #cp -f $rundir/gsi/comgsi_namelist.sh.soilTQ $outdir/.
+  cp -f $rundir/gsi/wrf_inout $outdir/.
+  cp -f $rundir/gsi/stdout $outdir/.
+  cp -f $rundir/gsi/diag_* $outdir/.
+  cp -f $rundir/gsi/gsiparm.anl $outdir/.
+  cp -f $rundir/gsi/fort.201 $outdir/.
+  cp -f $rundir/gsi/fort.202 $outdir/.
+  cp -f $rundir/gsi/fort.203 $outdir/.
+  cp -f $rundir/gsi/fort.213 $outdir/.
+  cp -f $rundir/gsi/fort.220 $outdir/.
   #LBC
   cp -f $rundir/lbc/parame.in $outdir/.
   cp -f $rundir/lbc/wrfbdy_d01.bu $outdir/.

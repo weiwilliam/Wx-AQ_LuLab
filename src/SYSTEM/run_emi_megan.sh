@@ -1,13 +1,14 @@
 #!/bin/bash
-JOBNAME="REAL"
-EXE="real.exe"
+JOBNAME="MEGAN"
+EXE="megan_bio_emiss"
 SCRIPTNAME="${JOBNAME}_runscript"
-NP=16
+NP=1
 JOBSQUEUE="`which squeue` -u ${USER}"
 SQFORMAT="%.10i %.9P %.25j %.8u %.8T %.10M %.10L %.3D %R"
 MPIRUN=`which mpirun`
 APRUN="/usr/bin/time $MPIRUN -np ${NP}"
-CKFILE="rsl.error.0000"
+CKFILE="megan_bio_emiss.out"
+INP="megan_bio_emiss.inp"
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
 #SBATCH --partition=kratos
@@ -16,9 +17,9 @@ cat > ./${SCRIPTNAME} << EOF
 #SBATCH --ntasks=8
 #SBATCH --mem=96000
 #SBATCH --exclusive
-#SBATCH --time=00:30:00
+#SBATCH --time=01:00:00
 ulimit -s unlimited
-$APRUN ${1}/${EXE} > ${JOBNAME}.log 2>&1
+$APRUN ${1}/${EXE} < ${INP} > ${JOBNAME}.log 2>&1
 EOF
 
 sbatch ${1}/${SCRIPTNAME}
@@ -32,13 +33,21 @@ do
     sleep 30
 done
 
-grep -i "SUCCESS" $CKFILE >> ${JOBNAME}.log
-ckrc=$?
-if [ $ckrc -eq 1 ]
-then
-    echo Error: Unsuccessfuly run of ${JOBNAME}.
-    exit 5
-fi
+CKFILE="filelist"
+sqrc=1
+count=0
+stopcount=10
+until [ $sqrc -ne 1 ]
+do
+    ls ./ > ${CKFILE}
+    grep -qi "wrfbiochemi_d02" ${CKFILE} 
+    sqrc=$?
+    sleep 20
+    count=$((count+1))
+    if [ $count -eq $stopcount ]
+    then
+       echo Error: Timeout ${JOBNAME}.
+       exit 20 #use different nonzero number for each script
+    fi
+done
 
-#sbatch -p kratos -N1 --exclusive --mem=28000 --wrap="/usr/bin/time mpirun -np 14 /network/rit/home/dg771199/WRF-GSI/src/WPS/geogrid.exe"
-#sbatch -p kratos -N1 --exclusive --mem=28000 --wrap="/usr/bin/time mpirun -np 14 ${1}/geogrid.exe"

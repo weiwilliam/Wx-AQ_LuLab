@@ -28,9 +28,9 @@ mkdir $rundir/dat
 #Link Data
 cd $rundir/dat
 gdasdir="$datpath/gdas/gdas.${sdate:0:8}/${sdate:8:2}"
-gdasln="prepbufr.gdas.${sdate:0:8}.t${sdate:8:2}z.nr"
+#gdasln="prepbufr.gdas.${sdate:0:8}.t${sdate:8:2}z.nr"
 gfsdir="$datpath/gfs/gfs.${sdate:0:8}/${sdate:8:2}"
-ln -sf $gdasdir/gdas.* $gdasln
+ln -sf $gdasdir/* .
 mkdir gfs
 cd gfs
 #ln -sf $gfsdir/gfs.t${sdate:8:2}z.pgrb2.0p25* .
@@ -49,7 +49,7 @@ then
   ln -sf $syspath/run_geogrid.sh run_geogrid.sh
 else
   pdate=`sh ${syspath}/get_pdate.bash $sdate`
-  cp -f $runpath/wrfgsi.run.$pdate/wps/geo_em.* . 
+  cp -f $runpath/$pdate/wps/geo_em.* . 
 fi
 ln -sf $syspath/run_ungrib.sh run_ungrib.sh
 ln -sf $syspath/run_metgrid.sh run_metgrid.sh
@@ -62,12 +62,8 @@ ln -sf $syspath/run_wrf.sh run_wrf.sh
 
 #GSI
 cd $rundir/gsi
-mkdir realtime
-ln -sf $gsipath/gsi.x .
-ln -sf $gsipath/comgsi_namelist.sh.soilTQ .
-ln -sf $gsipath/global_convinfo.txt .
-ln -sf $syspath/run_gsi_regional.ksh .
-ln -sf $syspath/datacheck_gsi.sh .
+cp $gsipath/gsi.x .
+cp $gsipath/nc_diag_cat.x .
 
 #LBC
 cd $rundir/lbc
