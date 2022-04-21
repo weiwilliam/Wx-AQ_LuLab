@@ -20,7 +20,8 @@ source ${I_MPI_ROOT}/intel64/bin/mpivars.sh release
 source ${INTEL_BASE}/linux/mkl/bin/mklvars.sh intel64
 ##$MKLROOT/lib/intel64_lin
 export I_MPI_CC=icc
-export LD_LIBRARY_PATH="${ASRC_SOFTWARE}/lib:${ASRC_SOFTWARE}/ESMF/lib:${ASRC_SOFTWARE}/NCEP/lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="${ASRC_SOFTWARE}/lib:${ASRC_SOFTWARE}/ESMF/lib:${ASRC_SOFTWARE}/NCEP/lib:$LD_LIBRARY_PATH:${ASRC_SOFTWARE}/HDF5/lib:${ASRC_SOFTWARE}/netcdf4/lib"
+#export LD_LIBRARY_PATH="${ASRC_SOFTWARE}/lib:${ASRC_SOFTWARE}/ESMF/lib:${ASRC_SOFTWARE}/NCEP/lib:$LD_LIBRARY_PATH"
 export NCARG_ROOT=/network/rit/lab/asrclab/viz/ncl
 export PROJ_LIB=/network/rit/lab/asrclab/soft/python3/share/proj
 

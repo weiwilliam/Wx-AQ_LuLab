@@ -5,7 +5,8 @@ set -x
 # WRF/Chem choice
 chem_opt=114
 realtime=0 
-# Define your own $runpath and $outpath below when you run retro case (i.e., realtime=0)
+# When run retro case (realtime=0), please carefully 
+# define your own path for $obsdir, $datpath, $runpath, $outpath below.
 
 ## Set Environment ##
 topdir=$PWD 
@@ -54,7 +55,7 @@ elif [ $realtime -eq 0 ]; then
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
      gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/summer"
      datpath="${runpath}/mockdata"
-     obsdir= "${runpath}/mockdata/logs"
+     obsdir="${runpath}/mockdata/logs"
      [[ ! -d $datpath ]]&& mkdir -p $datpath
      [[ ! -d  $obsdir ]]&& mkdir -p $obsdir
    fi
