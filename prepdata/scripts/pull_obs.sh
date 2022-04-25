@@ -24,7 +24,8 @@ if [ ! -d $target_dir ]; then
    mkdir -p $target_dir
 fi
 
-nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
+#nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
+nomadspath="https://ftpprd.ncep.noaa.gov/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos/"
 remote_prepbufr=$nomadspath/${dump}.t${cyc}z.prepbufr.nr  
  local_prepbufr=$target_dir/${dump}.t${cyc}z.prepbufr.nr  
 echo $prepbufr
@@ -52,19 +53,21 @@ fi
 
 rc=2
 ntry=0
-until [ $ntry -eq 5 ];do
+flag=0
+until [ $ntry -eq 2 ];do
    ntry=$((ntry+1))
    $wgetcmd -c $remote_prepbufr -O $local_prepbufr
    rc=$?
    if [ $rc -eq 0 ]; then
       echo "   Try #$ntry: Good" >> $cyc_logs
+      flag=1
    else
       echo "   Try #$ntry: Fail" >> $cyc_logs
    fi
    sleep 60
 done
 
-if [ $rc -eq 0 ]; then
+if [ $flag -eq 1 ]; then
    echo "`$datecmd -u` $CDATE Succeed" >> $cyc_logs
 else
    echo "Current time: `$datecmd -u`"

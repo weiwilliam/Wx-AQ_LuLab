@@ -2,11 +2,11 @@
 JOBNAME="WRF"
 EXE="wrf.exe"
 SCRIPTNAME="${JOBNAME}_runscript"
-NP=32
+NP=28
 JOBSQUEUE="`which squeue` -u ${USER}"
 SQFORMAT="%.10i %.9P %.25j %.8u %.8T %.10M %.10L %.3D %R"
 MPIRUN=`which mpirun`
-APRUN="/usr/bin/time $MPIRUN -np ${NP}"
+APRUN="/usr/bin/time $MPIRUN"
 CKFILE="rsl.error.0000"
 export WRFIO_NCD_LARGE_FILE_SUPPORT=1
 
@@ -15,7 +15,7 @@ cat > ./${SCRIPTNAME} << EOF
 #SBATCH --partition=kratos
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=4
-#SBATCH --ntasks=8
+#SBATCH --ntasks=${NP}
 #SBATCH --mem=96000
 #SBATCH --exclusive
 #SBATCH --time=10:00:00

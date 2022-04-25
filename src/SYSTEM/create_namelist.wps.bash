@@ -12,6 +12,9 @@ ehr=${3:8:2}
 wpspath=${4}
 
 fileo=$rundir/wps/namelist.wps
+if [ -s $fileo ]; then
+   rm $fileo
+fi
 cat << EOF > $fileo 
 &share
  wrf_core = 'ARW',

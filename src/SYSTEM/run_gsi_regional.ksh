@@ -14,13 +14,20 @@ ulimit -s unlimited
 # GSI_EXE  = path and name of the gsi executable 
 # ENS_ROOT = path where ensemble background files exist
   ANAL_TIME=${1}
-  WORK_ROOT=${2}/gsi
-  OBS_ROOT=${2}/dat
-  BK_ROOT=${3}
-  SYSPATH=${4}
-  GSIPATH=${5}  # Default path for GSI of wrf-gsi system on Kratos
+  GRID_ID=${2}
+  WORK_ROOT=${3}/gsi
+  OBS_ROOT=${3}/dat
+  BK_ROOT=${4}
+  SYSPATH=${5}
+  GSIPATH=${6}  # Default path for GSI of wrf-gsi system on Kratos
+  PBFRSUFFIX=${7}
   
-  JOBNAME='GSI'
+  JOBNAME="GSI_d0${GRID_ID}"
+  case $GRID_ID in
+  1) nnodes=1; nprocs=24 ;;
+  2) nnodes=4; nprocs=24 ;;
+  esac
+     
   GSI_ROOT=/network/rit/lab/josephlab/LIN/GSI/comGSIv3.7_EnKFv1.3
   CRTM_ROOT=/network/rit/lab/josephlab/LIN/GSI/CRTM_v2.3.0
   #ENS_ROOT=/network/rit/lab/josephlab/LIN/WORK/GSI/input/gfsens
@@ -34,8 +41,11 @@ ulimit -s unlimited
   FIX_ROOT=${GSI_ROOT}/fix
   GSI_NAMELIST=${SYSPATH}/create_gsiparm.anl.bash
   #PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.nr
-  PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.nr.nysmsfc
-  BK_FILE=${BK_ROOT}/wrfout_d01_${YYYY}-${MM}-${DD}_${HH}:00:00
+  PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.${PBFRSUFFIX}
+  BK_FILE=${BK_ROOT}/wrfout_d0${GRID_ID}_${YYYY}-${MM}-${DD}_${HH}:00:00
+     
+
+  #Job checking tools
   JOBSQUEUE="`which squeue` -u ${USER}"
   SQFORMAT="%.10i %.9P %.25j %.8u %.8T %.10M %.10L %.3D %R"
 #
@@ -184,9 +194,14 @@ fi
 #
 ##################################################################################
 # Create the ram work directory and cd into it
-workdir=${WORK_ROOT}
+workdir=${WORK_ROOT}/d0${GRID_ID}
+if [ ! -s $workdir ]; then
+   mkdir -p $workdir
+fi
 cd ${workdir}
 mkdir crtm_coeffs
+cp $GSI_EXE .
+cp $CATEXEC .
 
 #
 ##################################################################################
@@ -459,13 +474,13 @@ fi
 echo ' Run GSI with' ${bk_core} 'background'
 
 MPIRUN=`which mpirun`
-APRUN="/usr/bin/time $MPIRUN -np 8"
+APRUN="/usr/bin/time $MPIRUN"
 cat > ./gsirunscript << EOF
 #!/bin/bash
 #SBATCH --partition=kratos
 #SBATCH --job-name=${JOBNAME}
-#SBATCH --nodes=1
-#SBATCH --ntasks=8
+#SBATCH --nodes=${nnodes}
+#SBATCH --ntasks-per-node=${nprocs}
 #SBATCH --mem=96000
 #SBATCH --exclusive
 #SBATCH --time=00:15:00
@@ -487,10 +502,17 @@ done
 ##################################################################
 #  run time error check
 ##################################################################
-error=$?
+
+error=0
+if [ ! -s ./stdout ]; then
+   error=1
+else
+   grep "GSI_ANL HAS ENDED" ./stdout
+   error=$?
+fi
 
 if [ ${error} -ne 0 ]; then
-  echo "ERROR: ${GSI} crashed  Exit status=${error}"
+  echo "ERROR: GSI crashed  Exit status=${error}"
   exit ${error}
 fi
 
@@ -544,6 +566,7 @@ numfile[3]=0
 
 prefix="pe*"
 
+error=0
 loops="01 03"
 for loop in \$loops; do
 case \$loop in
@@ -558,22 +581,30 @@ esac
          count=\$(ls \${prefix}\${type}_\${loop}* 2>/dev/null | wc -l)
          if [ \$count -gt 1 ]; then
             if [ $binary_diag = ".true." ]; then
-               cat \${prefix}\${type}_\${loop}* > diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX}
+               cat \${prefix}\${type}_\${loop}* > diag_\${type}_\${string}.d0${GRID_ID}.${ANAL_TIME}${DIAG_SUFFIX}
+               error=\$?
             else
-               $MPIRUN $CATEXEC -o diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX} \${prefix}\${type}_\${loop}*
+               $MPIRUN $CATEXEC -o diag_\${type}_\${string}.d0${GRID_ID}.${ANAL_TIME}${DIAG_SUFFIX} \${prefix}\${type}_\${loop}*
+               error=\$?
             fi
             numfile[n]=\$(expr \${numfile[n]} + 1)
          elif [ \$count -eq 1 ]; then
-            cat \${prefix}\${type}_\${loop}* > diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX}
+            if [ $binary_diag = ".true." ]; then
+               cat \${prefix}\${type}_\${loop}* > diag_\${type}_\${string}.d0${GRID_ID}.${ANAL_TIME}${DIAG_SUFFIX}
+            else
+               mv \${prefix}\${type}_\${loop}* diag_\${type}_\${string}.d0${GRID_ID}.${ANAL_TIME}${DIAG_SUFFIX}
+            fi
             numfile[n]=\$(expr \${numfile[n]} + 1)
          fi
-         #if [ -s \$tmpdir/diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX} ]; then
-         #   mv \$tmpdir/diag_\${type}_\${string}.${ANAL_TIME}${DIAG_SUFFIX} \$outdir
-         #fi
       done
    done
    echo \$(date) END loop \$string >&2
 done
+if [ \$error -ne 0 ]; then
+   echo 'cat_gsi_diag fail'
+else
+   echo 'cat_gsi_diag succeed'
+fi 
 EOF
 
 sbatch $workdir/gsidiag_runscript
@@ -585,6 +616,19 @@ do
     sqrc=$?   
     sleep 10 
 done
+
+if [ -s ./gsidiag.log ]; then
+   grep "cat_gsi_diag succeed" ./gsidiag.log
+   error=$?
+   if [ $error -ne 0 ]; then
+      echo "cat_gsi_diag encountered problem, please check $workdir/gsidiag.log"
+      exit $error
+   fi
+else
+   error=1
+   echo "$workdir/gsidiag.log doesn't exist"
+   exit $error 
+fi
 
 #  Clean working directory to save only important files 
 #ls -l * > list_run_directory
