@@ -79,8 +79,6 @@ case $datatype in
    scrpts=$scrptshome/pull_obs.sh ;;
 'grib2')
    scrpts=$scrptshome/pull_grib2.sh ;;
-'NYSM')
-   scrpts=$scrptshome/pull_nysm.sh ;;
 esac
 
 sh $scrpts $dump $CDATE > $logdir/log.${dump}_${datatype}.${CDATE} 2>&1
