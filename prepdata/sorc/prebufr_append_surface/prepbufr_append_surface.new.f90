@@ -27,8 +27,7 @@ program prepbufr_append_surface
  data sprvstr /'SPRVSTG'/
 
  integer :: i, obsnum, readerrstat
- character(len=10) :: CDATE!, ID, LAT, LON, DHR, ELE, &
-                      !P, T, Q, U, V
+ character(len=10) :: CDATE
  integer :: CTIME
  character(len=4), allocatable, dimension(:) :: NYSM_ID
  real(8), allocatable, dimension(:) :: NYSM_LAT, NYSM_LON, &
@@ -38,28 +37,8 @@ program prepbufr_append_surface
 
 ! get NYSM observations as input arguments
  call getarg( 1,CDATE)
-! call getarg( 2,ID)
-! call getarg( 3,LAT)
-! call getarg( 4,LON)
-! call getarg( 5,ELE)
-! call getarg( 6,DHR)
-! call getarg( 7,P)
-! call getarg( 8,T)
-! call getarg( 9,Q)
-! call getarg(10,U)
-! call getarg(11,V)
-!
  read(CDATE,'(i10)') CTIME
-! NYSM_ID=trim(ID)
-! read(LAT,'(f10.2)') NYSM_LAT
-! read(LON,'(f10.2)') NYSM_LON
-! read(ELE,'(f10.1)') NYSM_ELE
-! read(DHR,'(f10.1)') NYSM_DHR
-! read(P,'(f10.2)') NYSM_P
-! read(T,'(f10.1)') NYSM_T
-! read(Q,'(f10.1)') NYSM_Q
-! read(U,'(f10.1)') NYSM_U
-! read(V,'(f10.1)') NYSM_V
+ write(6,*) 'Appending NYSM data for '//CDATE
 
 ! get NYSM observations from ./intermediate.csv
  open(unit_tmp,file='./intermediate.csv',status='old', &

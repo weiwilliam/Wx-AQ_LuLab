@@ -1,6 +1,6 @@
 #!/bin/ksh
 
-BIN_DIR=${PWD}/../bin
+BIN_DIR=${PWD}/../../bin
 export BUFR_DIR=/network/rit/lab/josephlab/LIN/GSI/build
 
 if [ ! -d $BIN_DIR ]; then

@@ -3,13 +3,14 @@ set -x
 Eaddress=swei@albany.edu
 export dump=$1 # gdas or gfs
 export datatype=$2 # obs or grib2
-export scrptshome=/network/rit/home/sw651133/scripts
-export homepath=/network/asrc/scratch/lulab/sw651133/nomads
-export datatank=$homepath/$dump
+export prepdatahome=/network/rit/home/sw651133/Wx-AQ/prepdata
+export scrptshome=${prepdatahome}/scripts
+export datapath=/network/asrc/scratch/lulab/sw651133/nomads
+export datatank=$datapath/$dump
 [[ ! -d $datatank ]]&&mkdir -p $datatank
-export logdir=$homepath/logs
+export logdir=$datapath/logs
 [[ ! -d $logdir ]]&&mkdir -p $logdir
-export wrktmp=$homepath/wrk
+export wrktmp=$datapath/wrk.${dump}_${datatype}
 if [ ! -d $wrktmp ]; then
    mkdir -p $wrktmp
 else
@@ -92,6 +93,18 @@ if [ $rc -ne 0 ]; then
 else
    echo "Finish time: `$datecmd -u`"
    # echo "Finish time: `$datecmd -u`" | mail -s "Finished,$dump,$datatype,$CDATE" $Eaddress
+fi
+
+if [ $datatype == 'obs' ]; then
+   sh $scrptshome/append_nysm2bufr.sh $dump $CDATE
+   rc=$?
+   if [ $rc -ne 0 ]; then
+      echo "`$datecmd -u`: !Warning! $CDATE code:$rc"
+      echo "`$datecmd -u`: !Warning! $CDATE code:$rc" | mail -s "Failed,$dump,$datatype,$CDATE,append_nysm" $Eaddress
+      exit $rc
+   else
+      echo "Finish time: `$datecmd -u`"
+   fi
 fi
 
 

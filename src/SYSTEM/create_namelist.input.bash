@@ -22,7 +22,7 @@ fi
 
 case $chemopt in
 114)
-  time_control=" auxinput5_inname                    = 'wrfchemi_d<domain>_<date>',
+  time_control="auxinput5_inname                    = 'wrfchemi_d<domain>_<date>',
  io_form_auxinput5                   = 2,
  frames_per_auxinput5                = 1, 1,
  auxinput5_interval_m                = 60, 60,
@@ -36,7 +36,7 @@ case $chemopt in
  auxinput7_interval_m                = 60, 60,
  force_use_old_data                  = .True.,
 !iofields_filename                   = 'iofield_list.txt','iofield_list.txt', !add output variables for process analysis"
-  chem=" kemit                               = 10,
+  chem="kemit                               = 10,
  bioemdt                             = 2,      2,    2,
  photdt                              = 30,     30,   30,
  chemdt                              = 2,     1,   0.5,
@@ -113,6 +113,7 @@ cat << EOF > $fileo
  io_form_input                       = 2,
  io_form_boundary                    = 2,
  debug_level                         = 0,
+ ${time_control}
  /
 
  &domains

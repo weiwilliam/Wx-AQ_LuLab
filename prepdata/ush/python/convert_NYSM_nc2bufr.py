@@ -45,15 +45,15 @@ def ws2uv(wd,ws):
    return round(u,1),round(v,1)
 
 ## Environment variables
-#cdate = os.getenv('CDATE')
-#cut_hour = int(os.getenv('HINT'))
-#input_path = os.getenv('INPUT_PATH')
-#fix_path = os.getenv('FIX_PATH')
+cdate = os.getenv('CDATE')
+cut_hour = int(os.getenv('HINT'))
+input_path = os.getenv('NYSM_PATH')
+fix_path = os.getenv('FIX_PATH')
 
-cdate = 2022042500 
-cut_hour = 1
-input_path = '/network/rit/lab/lulab/NY-Meso/proc'
-fix_path = '/network/rit/home/sw651133/Wx-AQ/prepdata/fix'
+#cdate = 2022042500 
+#cut_hour = 1
+#input_path = '/network/rit/lab/lulab/NY-Meso/proc'
+#fix_path = '/network/rit/home/sw651133/Wx-AQ/prepdata/fix'
 
 ## Define the date of nysm file to read in
 cyy=int(str(cdate)[:4]); cmm=int(str(cdate)[4:6])
@@ -170,10 +170,10 @@ if ( os.path.exists(infile0) ):
    output_df=output_df.loc[nan_filter,:]
    output_df=output_df.reset_index(drop=1)
    output_df=output_df.sort_values(by=['dhr','station'])
-   #output_df.to_csv('nysm_'+c_pdy+'_t'+c_hh+'z.txt',sep=' ',header=0,index=0)
 
    inter_filter=(output_df['station'].isin(stdclass_stnlist))
    inter_df=output_df.loc[inter_filter,:]
    inter_df.to_csv('./intermediate.csv',sep=' ',header=0,index=0)
+   print('%s records have converted.' %(inter_df.shape[0]),flush=1)
 else:
    print('Error: '+infile0+' does not exist!',flush=1)

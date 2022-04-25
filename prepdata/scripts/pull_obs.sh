@@ -2,10 +2,10 @@
 set -x
 dump=$1
 CDATE=${CDATE:-$2}
-homepath=${homepath:-/network/asrc/scratch/lulab/sw651133/nomads}
-datatank=${datatank:-$homepath/$dump}
-logdir=${logdir:-$homepath/logs}
-wrktmp=${wrktmp:-$homepath/wrk}
+datapath=${datapath:-/network/asrc/scratch/lulab/sw651133/nomads}
+datatank=${datatank:-$datapath/$dump}
+logdir=${logdir:-$datapath/logs}
+wrktmp=${wrktmp:-$datapath/wrk}
 cd $wrktmp
 #setup commands and env variables
 datecmd=`which date`
@@ -24,8 +24,8 @@ if [ ! -d $target_dir ]; then
    mkdir -p $target_dir
 fi
 
-#nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
-nomadspath="https://ftpprd.ncep.noaa.gov/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos/"
+nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
+#nomadspath="https://ftpprd.ncep.noaa.gov/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
 remote_prepbufr=$nomadspath/${dump}.t${cyc}z.prepbufr.nr  
  local_prepbufr=$target_dir/${dump}.t${cyc}z.prepbufr.nr  
 echo $prepbufr
