@@ -81,6 +81,8 @@ else:
    e_ym=s_ym
    e_y=s_y
    e_m=s_m
+s_dtime_str=s_dtime.strftime('%Y-%m-%d %H:%M:%S UTC')
+e_dtime_str=e_dtime.strftime('%Y-%m-%d %H:%M:%S UTC')
 
 ## Read in station information
 elev_file=os.path.join(fix_path,'nysm_elev.txt')
@@ -108,16 +110,19 @@ if (crossday):
 if ( os.path.exists(infile0) ):
    ds0=xa.open_dataset(infile0)
    df0=ds0.to_dataframe()
-   if ( crossday and os.path.exists(infile1) ):
-      ds1=xa.open_dataset(infile1)
-      df1=ds1.to_dataframe()
-      df0=pd.concat([df0,df1])
-   else:
-      print('Error: '+infile1+' does not exist!',flush=1)
+   if (crossday):
+      if ( os.path.exists(infile1) ):
+         ds1=xa.open_dataset(infile1)
+         df1=ds1.to_dataframe()
+         df0=pd.concat([df0,df1])
+      else:
+         print('Error: '+infile1+' does not exist!',flush=1)
+
    df0=df0.reset_index()
    df0_datetime=pd.to_datetime(df0['time_5M'],format="%Y-%m-%d %H:%M:%S UTC")
    df0['time_5M']=df0_datetime
    filter=((df0['time_5M']<=e_dtime)&(df0['time_5M']>=s_dtime))
+   print('Cut NYSM records between %s and %s'%(s_dtime_str,e_dtime_str),flush=1)
    tmpdf=df0.loc[filter,:]
    
    tmpdf=tmpdf[['station','time_5M','tair','relh',

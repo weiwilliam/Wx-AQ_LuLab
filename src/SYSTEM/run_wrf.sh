@@ -15,7 +15,7 @@ cat > ./${SCRIPTNAME} << EOF
 #SBATCH --partition=kratos
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=4
-#SBATCH --ntasks=${NP}
+#SBATCH --ntasks-per-node=${NP}
 #SBATCH --mem=96000
 #SBATCH --exclusive
 #SBATCH --time=10:00:00

@@ -7,6 +7,9 @@ homepath=${homepath:-/network/asrc/scratch/lulab/sw651133/nomads}
 datatank=${datatank:-$homepath/$dump}
 logdir=${logdir:-$homepath/logs}
 wrktmp=${wrktmp:-$homepath/wrk}
+if [ -f $prepdatahome/ush/conda_source ]; then
+   source $prepdatahome/ush/conda_source
+fi
 cd $wrktmp
 
 #setup commands and env variables
