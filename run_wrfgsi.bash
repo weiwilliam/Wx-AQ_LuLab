@@ -58,7 +58,7 @@ elif [ $realtime -eq 0 ]; then
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
      gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/summer"
      # prepbufr_suffix options: nr, nr.nysmsfc, nr.nysmsfc.lidar, nr.nysmsfc.lidar.mwr
-     prepbufr_suffix="nr" #.nysmsfc"
+     prepbufr_suffix="nr.nysmsfc"
      datpath="${runpath}/mockdata"
      obsdir="${runpath}/mockdata/logs"
      [[ ! -d $datpath ]]&& mkdir -p $datpath
@@ -215,7 +215,7 @@ while [ $sdate -le $last_date ]; do
        for d in $da_doms
        do
          sh $syspath/run_gsi_regional.ksh $sdate $d $rundir $gsiwrfoutdir $syspath $gsipath $prepbufr_suffix #> GSI.log  2>&1 
-         sh $syspath/datacheck_gsi.sh $rundir/gsi/d0$d
+         #sh $syspath/datacheck_gsi.sh $rundir/gsi/d0$d
        done
        error=$?
        if [ ${error} -ne 0 ]; then
@@ -255,7 +255,8 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
     ### STORE RUN ##
-    sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun
+    in_da_doms=`echo $da_doms | sed -e 's/ /_/g'`
+    sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun $in_da_doms
     ## CLEAN UP ##
     echo "Firstrun is $firstrun" >> $logfile
     echo "Program Complete for $sdate" >> $logfile
