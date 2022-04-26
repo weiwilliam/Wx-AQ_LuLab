@@ -27,7 +27,7 @@ cp -f $rundir/wrf/wrfbdy_* $outdir/.
 cp -f $rundir/wrf/namelist.input $outdir/.
 if [ $firstrun -eq 0 ]
 then
-  for dom in da_doms
+  for dom in $da_doms
   do
      #GSI
      #cp -f $rundir/gsi/GSI.log $outdir/.
