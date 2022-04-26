@@ -3,7 +3,7 @@ set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice
-chem_opt=114
+chem_opt=0
 realtime=0 
 da_doms="1 2"
 # When run retro case (realtime=0), please carefully 
@@ -43,12 +43,12 @@ elif [ $realtime -eq 0 ]; then
    obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
    datpath="/network/asrc/scratch/lulab/sw651133/nomads"
    ## Output ##
-   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test"
-   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out"
+   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test_chem0"
+   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out_chem0"
 #  runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
 #  outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
    logpath="$outpath/log"
-   first_date="2018071500" #10 digits time at every 6h; +6 hour forecast
+   first_date="2018071418" #10 digits time at every 6h; +6 hour forecast
     last_date="2018071500"
    prepbufr_suffix="nr"
    
@@ -212,9 +212,19 @@ while [ $sdate -le $last_date ]; do
        ## GSI ##
        #gsiwrfoutdir="$outpath/wrfgsi.out.$pdate"
        gsiwrfoutdir="$runpath/$pdate/wrf"
+
+       y4=${sdate:0:4}; m2=${sdate:4:2}; d2=${sdate:6:2}; h2=${sdate:8:2}
+       if [ $realtime -eq 1 ]; then 
+          prepbufr_file=gdas.t${h2}z.prepbufr.${prepbufr_suffix}
+       else
+          prepbufr_file=prepbufr.gdas.${y4}${m2}${d2}.t${h2}z.${prepbufr_suffix}
+       fi
+       convinfotag=`echo ${prepbufr_suffix#nr} | sed -e 's/\./_/g'`
+       convinfo=global_convinfo${convinfotag}.txt
+           
        for d in $da_doms
        do
-         sh $syspath/run_gsi_regional.ksh $sdate $d $rundir $gsiwrfoutdir $syspath $gsipath $prepbufr_suffix #> GSI.log  2>&1 
+         sh $syspath/run_gsi_regional.ksh $sdate $d $rundir $gsiwrfoutdir $syspath $gsipath $prepbufr_file $convinfo #> GSI.log  2>&1 
          #sh $syspath/datacheck_gsi.sh $rundir/gsi/d0$d
        done
        error=$?

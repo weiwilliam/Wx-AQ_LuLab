@@ -20,7 +20,8 @@ ulimit -s unlimited
   BK_ROOT=${4}
   SYSPATH=${5}
   GSIPATH=${6}  # Default path for GSI of wrf-gsi system on Kratos
-  PBFRSUFFIX=${7}
+  PBFRFILE=${7}
+  INCONVF=${8}
   
   JOBNAME="GSI_d0${GRID_ID}"
   case $GRID_ID in
@@ -41,7 +42,7 @@ ulimit -s unlimited
   FIX_ROOT=${GSI_ROOT}/fix
   GSI_NAMELIST=${SYSPATH}/create_gsiparm.anl.bash
   #PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.nr
-  PREPBUFR=${OBS_ROOT}/prepbufr.gdas.${YYYY}${MM}${DD}.t${HH}z.${PBFRSUFFIX}
+  PREPBUFR=${OBS_ROOT}/${PBFRFILE}
   BK_FILE=${BK_ROOT}/wrfout_d0${GRID_ID}_${YYYY}-${MM}-${DD}_${HH}:00:00
      
 
@@ -344,8 +345,8 @@ else
 fi
 
 # Setup the needed info table for GSI
-#CONVINFO=${GSIPATH}/global_convinfo.txt
-CONVINFO=${GSIPATH}/global_convinfo_nysmsfc.txt
+#CONVINFO=${GSIPATH}/global_convinfo_nysmsfc.txt
+CONVINFO=${GSIPATH}/${INCONVF}
 SATANGL=${FIX_ROOT}/global_satangbias.txt
 SATINFO=${FIX_ROOT}/global_satinfo.txt
 OZINFO=${FIX_ROOT}/global_ozinfo.txt
