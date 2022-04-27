@@ -3,9 +3,11 @@ set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice
-chem_opt=114
+chem_opt=0
 realtime=0 
-# Define your own $runpath and $outpath below when you run retro case (i.e., realtime=0)
+da_doms="1 2"
+# When run retro case (realtime=0), please carefully 
+# define your own path for $obsdir, $datpath, $runpath, $outpath below.
 
 ## Set Environment ##
 topdir=$PWD 
@@ -29,6 +31,7 @@ if [ $realtime -eq 1 ]; then
    runpath="/network/asrc/scratch/lulab/WRF-GSI-NRT"
    outpath="/network/rit/lab/lulab/WRF-GSI-NRT"
    logpath="$outpath/log"
+   prepbufr_suffix="nr"
    ## Start Date for NRT run ##
    sdate=`sh ${syspath}/get_sdate.bash`
 
@@ -40,21 +43,24 @@ elif [ $realtime -eq 0 ]; then
    obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
    datpath="/network/asrc/scratch/lulab/sw651133/nomads"
    ## Output ##
-   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test"
-   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out"
+   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test_chem0"
+   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out_chem0"
 #  runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
 #  outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
    logpath="$outpath/log"
    first_date="2018071418" #10 digits time at every 6h; +6 hour forecast
-    last_date="2018071418"
+    last_date="2018071500"
+   prepbufr_suffix="nr"
    
    LISTOS=1
    if [ $LISTOS -eq 1 ]; then
      num_metgrid_levels=32
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
      gdassource="/network/rit/lab/josephlab/LIN/WORK/DATA/GSI-OBS/summer"
+     # prepbufr_suffix options: nr, nr.nysmsfc, nr.nysmsfc.lidar, nr.nysmsfc.lidar.mwr
+     prepbufr_suffix="nr.nysmsfc"
      datpath="${runpath}/mockdata"
-     obsdir= "${runpath}/mockdata/logs"
+     obsdir="${runpath}/mockdata/logs"
      [[ ! -d $datpath ]]&& mkdir -p $datpath
      [[ ! -d  $obsdir ]]&& mkdir -p $obsdir
    fi
@@ -131,6 +137,13 @@ while [ $sdate -le $last_date ]; do
     fi
     sh $syspath/create_namelist.wps.bash $rundir $sdate $edate $wpspath
     sh $syspath/create_namelist.input.bash $rundir $sdate $edate $num_metgrid_levels 0
+    error=$?
+    if [ ${error} -ne 0 ]; then
+      echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+      echo "Problem to create namelist.input. See details in create_namelist.input.bash." >> $logfile
+      exit ${error}
+    fi
+     
     
     ##### BEGIN SYSTEM #####
     ## GOTO WPS ##
@@ -164,8 +177,7 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
     
-    echo "WPS finish time:"
-    date
+    echo "WPS finish time: $(date)"
     
     
     ## GOTO WRF ##
@@ -180,8 +192,7 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
     
-    echo "Real finish time:"
-    date
+    echo "Real finish time: $(date)"
     
     ## GDAS DATA CHECK ##
     if [ $firstrun -eq 0 ] ## Not first run of cycled system.
@@ -201,12 +212,25 @@ while [ $sdate -le $last_date ]; do
        ## GSI ##
        #gsiwrfoutdir="$outpath/wrfgsi.out.$pdate"
        gsiwrfoutdir="$runpath/$pdate/wrf"
-       sh $syspath/run_gsi_regional.ksh $sdate $rundir $gsiwrfoutdir $syspath $gsipath > GSI.log  2>&1
-       sh $syspath/datacheck_gsi.sh $rundir/gsi
+
+       y4=${sdate:0:4}; m2=${sdate:4:2}; d2=${sdate:6:2}; h2=${sdate:8:2}
+       if [ $realtime -eq 1 ]; then 
+          prepbufr_file=gdas.t${h2}z.prepbufr.${prepbufr_suffix}
+       else
+          prepbufr_file=prepbufr.gdas.${y4}${m2}${d2}.t${h2}z.${prepbufr_suffix}
+       fi
+       convinfotag=`echo ${prepbufr_suffix#nr} | sed -e 's/\./_/g'`
+       convinfo=global_convinfo${convinfotag}.txt
+           
+       for d in $da_doms
+       do
+         sh $syspath/run_gsi_regional.ksh $sdate $d $rundir $gsiwrfoutdir $syspath $gsipath $prepbufr_file $convinfo #> GSI.log  2>&1 
+         #sh $syspath/datacheck_gsi.sh $rundir/gsi/d0$d
+       done
        error=$?
        if [ ${error} -ne 0 ]; then
          echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-         echo "Unsuccessful run of real.exe." >> $logfile     
+         echo "Unsuccessful run of GSI" >> $logfile     
          exit ${error}
        fi
        ## GOTO LBC ##
@@ -222,7 +246,9 @@ while [ $sdate -le $last_date ]; do
        ## GOBACKTO WRF ##
        cd $rundir/wrf
        mv wrfinput_d01 wrfinput_d01.real
+       mv wrfinput_d02 wrfinput_d02.real
        cp $rundir/lbc/wrf_inout wrfinput_d01
+       cp $rundir/gsi/d02/wrf_inout wrfinput_d02 
     fi
     
     ## WRF/Chem input prep if chem_opt is not 0 ##
@@ -239,7 +265,8 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
     ### STORE RUN ##
-    sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun
+    in_da_doms=`echo $da_doms | sed -e 's/ /_/g'`
+    sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun $in_da_doms
     ## CLEAN UP ##
     echo "Firstrun is $firstrun" >> $logfile
     echo "Program Complete for $sdate" >> $logfile

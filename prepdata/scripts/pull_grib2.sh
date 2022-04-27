@@ -2,10 +2,10 @@
 set -x
 dump=$1
 CDATE=${CDATE:-$2}
-homepath=${homepath:-/network/asrc/scratch/lulab/sw651133/nomads}
-datatank=${datatank:-$homepath/$dump}
-logdir=${logdir:-$homepath/logs}
-wrktmp=${wrktmp:-$homepath/wrk}
+datapath=${datapath:-/network/asrc/scratch/lulab/sw651133/nomads}
+datatank=${datatank:-$datapath/$dump}
+logdir=${logdir:-$datapath/logs}
+wrktmp=${wrktmp:-$datapath/wrk}
 cd $wrktmp
 #setup commands and env variables
 datecmd=`which date`
@@ -31,6 +31,7 @@ if [ -s $wrktmp/grb2filelist ]; then
 fi
 
 nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
+#nomadspath="https://ftpprd.ncep.noaa.gov/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
 fhr=0
 until [ $fhr -gt $fhmax ]; do
    fhrstr=`printf %3.3i $fhr`
@@ -63,19 +64,21 @@ fi
 
 rc=2
 ntry=0
-until [ $ntry -eq 5 ];do
+flag=0
+until [ $ntry -eq 2 ];do
    ntry=$((ntry+1))
    $wgetcmd -c $remote_prepbufr -i grb2filelist
    rc=$?
    if [ $rc -eq 0 ]; then
       echo "Try #$ntry: Good" 
+      flag=1
    else
       echo "Try #$ntry: Fail"
    fi
    sleep 60
 done
 
-if [ $rc -eq 0 ]; then
+if [ $flag -eq 1 ]; then
    mvrc=0
    fhr=0
    until [ $fhr -gt $fhmax ]; do

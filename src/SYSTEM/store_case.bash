@@ -4,6 +4,8 @@ rundir=${1}
 outdir=${2}
 sdate=${3}
 firstrun=${4}
+da_doms=${5}
+da_doms=`echo $da_doms | sed -e 's/_/ /g'`
 
 if [ -d $outdir ]
 then
@@ -25,19 +27,20 @@ cp -f $rundir/wrf/wrfbdy_* $outdir/.
 cp -f $rundir/wrf/namelist.input $outdir/.
 if [ $firstrun -eq 0 ]
 then
-  #GSI
-  #cp -f $rundir/gsi/run_gsi_regional.ksh $outdir/.
-  cp -f $rundir/gsi/GSI.log $outdir/.
-  #cp -f $rundir/gsi/comgsi_namelist.sh.soilTQ $outdir/.
-  cp -f $rundir/gsi/wrf_inout $outdir/.
-  cp -f $rundir/gsi/stdout $outdir/.
-  cp -f $rundir/gsi/diag_* $outdir/.
-  cp -f $rundir/gsi/gsiparm.anl $outdir/.
-  cp -f $rundir/gsi/fort.201 $outdir/.
-  cp -f $rundir/gsi/fort.202 $outdir/.
-  cp -f $rundir/gsi/fort.203 $outdir/.
-  cp -f $rundir/gsi/fort.213 $outdir/.
-  cp -f $rundir/gsi/fort.220 $outdir/.
+  for dom in $da_doms
+  do
+     #GSI
+     #cp -f $rundir/gsi/GSI.log $outdir/.
+     cp -f $rundir/gsi/d0$dom/wrf_inout $outdir/wrf_inout_d0${dom}
+     cp -f $rundir/gsi/d0$dom/stdout $outdir/stdout_d0${dom}
+     cp -f $rundir/gsi/d0$dom/diag_* $outdir/.
+     cp -f $rundir/gsi/d0$dom/gsiparm.anl $outdir/gsiparm_d0${dom}.anl
+     cp -f $rundir/gsi/d0$dom/fort.201 $outdir/fort_d0${dom}.201
+     cp -f $rundir/gsi/d0$dom/fort.202 $outdir/fort_d0${dom}.202
+     cp -f $rundir/gsi/d0$dom/fort.203 $outdir/fort_d0${dom}.203
+     cp -f $rundir/gsi/d0$dom/fort.213 $outdir/fort_d0${dom}.213
+     cp -f $rundir/gsi/d0$dom/fort.220 $outdir/fort_d0${dom}.220
+  done
   #LBC
   cp -f $rundir/lbc/parame.in $outdir/.
   cp -f $rundir/lbc/wrfbdy_d01.bu $outdir/.

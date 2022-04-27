@@ -15,7 +15,7 @@ rundir=${1}
 cd $rundir/lbc
 mv $rundir/wrf/wrfbdy_d01 .
 cp -f wrfbdy_d01 wrfbdy_d01.bu
-cp -f $rundir/gsi/wrf_inout .
+cp -f $rundir/gsi/d01/wrf_inout .
 
 
 cat > ./${SCRIPTNAME} << EOF
