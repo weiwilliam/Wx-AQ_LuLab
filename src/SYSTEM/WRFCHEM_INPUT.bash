@@ -107,6 +107,8 @@ sh $syspath/create_namelist.input.bash $rundir $sdate $edate $num_metgrid_levels
 
 cd $rundir/wrf
 sh run_real.sh $rundir/wrf
+cp rsl.error.0000 rsl.error.0000.realchem
+cp rsl.out.0000 rsl.out.0000.realchem
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -134,7 +136,7 @@ ln -sf /network/rit/lab/lulab/WRF-GSI/src/EMI/MOZBC/* .
 ln -sf $syspath/create_emiinp_mozbc.bash .
 ln -sf $syspath/run_emi_mozbc.sh .
 
-echo"mozbc for Domain 2:"
+echo "mozbc for Domain 2:"
 do_bc=.false.
 domain=2
 sh create_emiinp_mozbc.bash $mozbcdir $do_bc $domain
@@ -146,7 +148,7 @@ if [ ${error} -ne 0 ]; then
   exit ${error}
 fi
 
-echo"mozbc for Domain 1:"
+echo "mozbc for Domain 1:"
 do_bc=.true.
 domain=1
 sh create_emiinp_mozbc.bash $mozbcdir $do_bc $domain

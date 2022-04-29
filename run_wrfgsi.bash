@@ -2,8 +2,8 @@
 set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
-# WRF/Chem choice
-chem_opt=0
+# WRF/Chem choice, only 0 and 114 tested
+chem_opt=114
 realtime=0 
 da_doms="1 2"
 # When run retro case (realtime=0), please carefully 
@@ -43,13 +43,15 @@ elif [ $realtime -eq 0 ]; then
    obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
    datpath="/network/asrc/scratch/lulab/sw651133/nomads"
    ## Output ##
-   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test_chem0"
-   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out_chem0"
-#  runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
-#  outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
+#   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test_chem0"
+#   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out_chem0"
+   runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
+   outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
+#   runpath="/network/asrc/scratch/lulab/hluo/run"
+ #  outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2018071418" #10 digits time at every 6h; +6 hour forecast
-    last_date="2018071500"
+   first_date="2018080712" #10 digits time at every 6h; +6 hour forecast
+    last_date="2018080712"
    prepbufr_suffix="nr"
    
    LISTOS=1
@@ -185,6 +187,8 @@ while [ $sdate -le $last_date ]; do
     ## REAL ##
     ln -sf $rundir/wps/met_em.d0* .
     sh run_real.sh $rundir/wrf
+    cp rsl.error.0000 rsl.error.0000.real
+    cp rsl.out.0000 rsl.out.0000.real
     error=$?
     if [ ${error} -ne 0 ]; then
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -193,7 +197,13 @@ while [ $sdate -le $last_date ]; do
     fi
     
     echo "Real finish time: $(date)"
-    
+
+    ## WRF/Chem input prep if chem_opt is not 0 ##
+    if [ $chem_opt -ne 0 ]; then
+      sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt
+    fi
+
+ 
     ## GDAS DATA CHECK ##
     if [ $firstrun -eq 0 ] ## Not first run of cycled system.
     then
@@ -249,11 +259,6 @@ while [ $sdate -le $last_date ]; do
        mv wrfinput_d02 wrfinput_d02.real
        cp $rundir/lbc/wrf_inout wrfinput_d01
        cp $rundir/gsi/d02/wrf_inout wrfinput_d02 
-    fi
-    
-    ## WRF/Chem input prep if chem_opt is not 0 ##
-    if [ $chem_opt -ne 0 ]; then
-      sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt
     fi
     
     ## WRF ##
