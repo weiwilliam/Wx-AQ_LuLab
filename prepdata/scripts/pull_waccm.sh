@@ -49,11 +49,6 @@ if [ -s $wrktmp/waccmfilelist ];then
    flag=0
    until [ $ntry -eq 2 ];do
       ntry=$((ntry+1))
-      if [ $ntry -eq 1 ]; then
-         wgetarg="-i"
-      else
-         wgetarg="-N -i"
-      fi
       $wgetcmd -N -i $wrktmp/waccmfilelist
       rc=$?
       if [ $rc -eq 0 ]; then
