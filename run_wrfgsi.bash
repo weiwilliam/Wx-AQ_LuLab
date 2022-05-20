@@ -53,11 +53,11 @@ elif [ $realtime -eq 0 ]; then
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
 #   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2022050100" #10 digits time at every 6h; +6 hour forecast
-    last_date="2022050106"
+   first_date="2018071400" #10 digits time at every 6h; +6 hour forecast
+    last_date="2018071406"
    prepbufr_suffix="nr"
    
-   LISTOS=0
+   LISTOS=1
    if [ $LISTOS -eq 1 ]; then
      num_metgrid_levels=32
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
