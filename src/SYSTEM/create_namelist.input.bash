@@ -9,16 +9,17 @@ eyear=${3:0:4}
 emon=${3:4:2}
 eday=${3:6:2}
 ehr=${3:8:2}
-num_metgrid_levels=${4}
-chemopt=${5}
+rhr=${4}
+num_metgrid_levels=${5}
+chemopt=${6}
 
-if [ $shr -eq 00 ]
-then
-   # Update the rhr with other variables in run_wrfgsi.bash
-   rhr=6
-else
-   rhr=6
-fi
+#if [ $shr -eq 00 ]
+#then
+#   # Update the rhr with other variables in run_wrfgsi.bash
+#   rhr=6
+#else
+#   rhr=6
+#fi
 
 case $chemopt in
 114)
@@ -79,7 +80,7 @@ case $chemopt in
   chem=""
   ;; 
 *)
-  echo "Not supported chem_opt"
+  echo "Not supported chem_opt: $chemopt"
   exit 31
 esac
 

@@ -52,9 +52,9 @@ if [ -s $wrktmp/waccmfilelist ];then
       if [ $ntry -eq 1 ]; then
          wgetarg="-i"
       else
-         wgetarg="-c -i"
+         wgetarg="-N -i"
       fi
-      $wgetcmd $wgetarg $wrktmp/waccmfilelist
+      $wgetcmd -N -i $wrktmp/waccmfilelist
       rc=$?
       if [ $rc -eq 0 ]; then
          echo "Try #$ntry: Good"

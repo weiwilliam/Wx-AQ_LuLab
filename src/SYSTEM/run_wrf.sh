@@ -36,7 +36,7 @@ done
 
 grep -i "SUCCESS" $CKFILE >> ${JOBNAME}.log
 ckrc=$?
-if [ $ckrc -ne 1 ]
+if [ $ckrc -ne 0 ]
 then
     echo Error: Unsuccessfuly run of ${JOBNAME}.
     exit 8

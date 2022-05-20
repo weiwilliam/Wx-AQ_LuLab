@@ -33,7 +33,7 @@ do
         ln -sf $gfssource/gfs.0p25.${ndate}.f000.grib2 gfs.t${sdate}z.pgrb2.0p25.f0"${h}"
     fi
 
-    ndate=`sh ${syspath}/get_ndate.bash $ndate`
+    ndate=`sh ${syspath}/get_ndate.bash 6 $ndate`
     h=$(($h + 6))
 done
 

@@ -55,7 +55,7 @@ ntry=0
 flag=0
 until [ $ntry -eq 2 ];do
    ntry=$((ntry+1))
-   $wgetcmd -c $remote_prepbufr -O $local_prepbufr
+   $wgetcmd -N $remote_prepbufr -O $local_prepbufr
    rc=$?
    if [ $rc -eq 0 ]; then
       echo "   Try #$ntry: Good" >> $cyc_logs
