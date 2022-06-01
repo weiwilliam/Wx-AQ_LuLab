@@ -3,9 +3,12 @@ set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice, only 0 and 114 tested
-chem_opt=114
+chem_opt=0
 realtime=0 
 da_doms="1 2"
+major_rhr=12
+cycle_rhr=6
+major_cycle_list="00"
 # When run retro case (realtime=0), please carefully 
 # define your own path for $obsdir, $datpath, $runpath, $outpath below.
 
@@ -43,15 +46,15 @@ elif [ $realtime -eq 0 ]; then
    obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
    datpath="/network/asrc/scratch/lulab/sw651133/nomads"
    ## Output ##
-#   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test_chem0"
-#   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out_chem0"
-   runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
-   outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
+   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test"
+   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out"
+#   runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
+#   outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
- #  outpath="/network/rit/lab/lulab/hluo/out"
+#   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2018080712" #10 digits time at every 6h; +6 hour forecast
-    last_date="2018080712"
+   first_date="2018071400" #10 digits time at every 6h; +6 hour forecast
+    last_date="2018071406"
    prepbufr_suffix="nr"
    
    LISTOS=1
@@ -86,18 +89,26 @@ if [ $realtime -eq 1 ]; then
     last_date=$sdate
 fi
 
+majcyclist=${major_cycle_list//" "/"|"}
 num_metgrid_levels=${num_metgrid_levels:-34}
 
 sdate=$first_date
 while [ $sdate -le $last_date ]; do
+     
+    cyc=${sdate:8:2}
+    ## Determine the forecast length based on major_cycle_list 
+    eval "case \$cyc in
+    $majcyclist) rhr=\$major_rhr ;;
+    *) rhr=\$cycle_rhr ;;
+    esac"
 
     ## End Date and Previous Cycle Date( - 6hr) ##
-    edate=`sh ${syspath}/get_edate.bash $sdate`
-    pdate=`sh ${syspath}/get_pdate.bash $sdate`
+    edate=`sh ${syspath}/get_ndate.bash $rhr $sdate`
+    pdate=`sh ${syspath}/get_ndate.bash -$cycle_rhr $sdate`
     
     ## Create mockdata for LISTOS period experiment
     if [ $LISTOS -eq 1 ]; then
-       sh $syspath/create_mockdata.bash $gfssource $gdassource $datpath $obsdir $sdate $syspath
+       sh $syspath/create_mockdata.bash $gfssource $gdassource $datpath $obsdir $sdate $edate $syspath
     fi
     
     ## Create Logfile and sdate dependent variables ##
@@ -130,7 +141,7 @@ while [ $sdate -le $last_date ]; do
     fi
     
     ## Create Case ##
-    sh $syspath/create_case.bash $datpath $rundir $runpath $syspath $wpspath $wrfpath $lbcpath $gsipath $sdate $firstrun
+    sh $syspath/create_case.bash $datpath $rundir $runpath $syspath $wpspath $wrfpath $lbcpath $gsipath $sdate $cycle_rhr $firstrun
     error=$?
     if [ ${error} -ne 0 ]; then
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -138,7 +149,7 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
     sh $syspath/create_namelist.wps.bash $rundir $sdate $edate $wpspath
-    sh $syspath/create_namelist.input.bash $rundir $sdate $edate $num_metgrid_levels 0
+    sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels 0
     error=$?
     if [ ${error} -ne 0 ]; then
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -227,15 +238,18 @@ while [ $sdate -le $last_date ]; do
        if [ $realtime -eq 1 ]; then 
           prepbufr_file=gdas.t${h2}z.prepbufr.${prepbufr_suffix}
        else
-          prepbufr_file=prepbufr.gdas.${y4}${m2}${d2}.t${h2}z.${prepbufr_suffix}
+          if [ $LISTOS -eq 1 ]; then
+             prepbufr_file=prepbufr.gdas.${y4}${m2}${d2}.t${h2}z.${prepbufr_suffix}
+          else
+             prepbufr_file=gdas.t${h2}z.prepbufr.${prepbufr_suffix}
+          fi
        fi
        convinfotag=`echo ${prepbufr_suffix#nr} | sed -e 's/\./_/g'`
        convinfo=global_convinfo${convinfotag}.txt
            
        for d in $da_doms
        do
-         sh $syspath/run_gsi_regional.ksh $sdate $d $rundir $gsiwrfoutdir $syspath $gsipath $prepbufr_file $convinfo #> GSI.log  2>&1 
-         #sh $syspath/datacheck_gsi.sh $rundir/gsi/d0$d
+         sh $syspath/run_gsi_regional.ksh $sdate $d $rundir $gsiwrfoutdir $syspath $gsipath $prepbufr_file $convinfo
        done
        error=$?
        if [ ${error} -ne 0 ]; then
@@ -277,7 +291,7 @@ while [ $sdate -le $last_date ]; do
     echo "Program Complete for $sdate" >> $logfile
     echo "Program Complete for $sdate" 
     
-    ndate=`sh ${syspath}/get_ndate.bash $sdate`
+    ndate=`sh ${syspath}/get_ndate.bash $cycle_rhr $sdate`
     sdate=$ndate
 
 done # End the loop of period

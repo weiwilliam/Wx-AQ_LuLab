@@ -570,11 +570,11 @@ prefix="pe*"
 error=0
 loops="01 03"
 for loop in \$loops; do
-case \$loop in
-  01) string=ges;;
-  03) string=anl;;
-   *) string=\$loop;;
-esac
+   case \$loop in
+     01) string=ges;;
+     03) string=anl;;
+      *) string=\$loop;;
+   esac
    echo \$(date) START loop \$string >&2
    n=-1
    while [ \$((n+=1)) -le \$ntype ] ;do
@@ -596,6 +596,11 @@ esac
                mv \${prefix}\${type}_\${loop}* diag_\${type}_\${string}.d0${GRID_ID}.${ANAL_TIME}${DIAG_SUFFIX}
             fi
             numfile[n]=\$(expr \${numfile[n]} + 1)
+         fi
+         if [ \$count -eq 0 ]; then
+            eroor=1
+         elif [ ! -s diag_\${type}_\${string}.d0${GRID_ID}.${ANAL_TIME}${DIAG_SUFFIX} ]; then
+            error=2
          fi
       done
    done

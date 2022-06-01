@@ -4,14 +4,14 @@ Eaddress=swei@albany.edu
 export dump=$1 # gdas or gfs
 export datatype=$2 # obs or grib2
 export CDATE=$3
-export prepdatahome=/network/rit/home/sw651133/Wx-AQ/prepdata
+export prepdatahome=${PWD}/..
 export scrptshome=${prepdatahome}/scripts
 export datapath=/network/asrc/scratch/lulab/sw651133/nomads
 export datatank=$datapath/$dump
 [[ ! -d $datatank ]]&&mkdir -p $datatank
 export logdir=$datapath/logs
 [[ ! -d $logdir ]]&&mkdir -p $logdir
-export wrktmp=$datapath/mnl_wrk.${dump}_${datatype}
+export wrktmp=$datapath/wrk/mnl_wrk.${dump}_${datatype}
 if [ ! -d $wrktmp ]; then
    mkdir -p $wrktmp
 else
@@ -48,6 +48,10 @@ case $datatype in
    scrpts=$scrptshome/pull_obs.sh ;;
 'grib2')
    scrpts=$scrptshome/pull_grib2.sh ;;
+'waccm')
+   scrpts=$scrptshome/pull_waccm.sh ;;
+'finn')
+   scrpts=$scrptshome/pull_finn.sh ;;
 esac
 
 sh $scrpts $dump $CDATE > $logdir/log.${dump}_${datatype}.${CDATE} 2>&1

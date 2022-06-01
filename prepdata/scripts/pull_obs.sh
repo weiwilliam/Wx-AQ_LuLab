@@ -51,12 +51,11 @@ if [ $rc -eq 0 ]; then
    echo "Data available time:`$datecmd -u`"
 fi
 
-rc=2
 ntry=0
 flag=0
 until [ $ntry -eq 2 ];do
    ntry=$((ntry+1))
-   $wgetcmd -c $remote_prepbufr -O $local_prepbufr
+   $wgetcmd -N $remote_prepbufr -O $local_prepbufr
    rc=$?
    if [ $rc -eq 0 ]; then
       echo "   Try #$ntry: Good" >> $cyc_logs
@@ -71,7 +70,7 @@ if [ $flag -eq 1 ]; then
    echo "`$datecmd -u` $CDATE Succeed" >> $cyc_logs
 else
    echo "Current time: `$datecmd -u`"
-   echo "!!!Error!!! Data transfer failed 5 times ($((ntry*60)) seconds)"
+   echo "!!!Error!!! Data transfer failed $ntry times ($((ntry*60)) seconds)"
    echo "`$datecmd -u` $CDATE Failed: data transfer failed" >> $cyc_logs
    exit 2 
 fi

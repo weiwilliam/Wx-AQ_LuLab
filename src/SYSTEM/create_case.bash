@@ -9,7 +9,8 @@ wrfpath=${6}
 lbcpath=${7}
 gsipath=${8}
 sdate=${9}
-geo=${10} # should be firstrun
+cychr=${10}
+geo=${11} # should be firstrun
 
 if [ -d $rundir ] 
 then
@@ -33,9 +34,7 @@ gfsdir="$datpath/gfs/gfs.${sdate:0:8}/${sdate:8:2}"
 ln -sf $gdasdir/* .
 mkdir gfs
 cd gfs
-#ln -sf $gfsdir/gfs.t${sdate:8:2}z.pgrb2.0p25* .
-ln -sf $gfsdir/* .
-
+ln -sf $gfsdir/gfs.t${sdate:8:2}z.pgrb2.0p25* .
 
 #WPS
 cd $rundir/wps
@@ -48,7 +47,7 @@ then
   ln -sf $wpspath/geogrid.exe .
   ln -sf $syspath/run_geogrid.sh run_geogrid.sh
 else
-  pdate=`sh ${syspath}/get_pdate.bash $sdate`
+  pdate=`sh ${syspath}/get_ndate.bash -$cychr $sdate`
   cp -f $runpath/$pdate/wps/geo_em.* . 
 fi
 ln -sf $syspath/run_ungrib.sh run_ungrib.sh

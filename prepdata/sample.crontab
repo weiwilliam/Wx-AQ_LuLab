@@ -1,0 +1,11 @@
+SHELL=/usr/bin/bash
+CRON_TZ=UTC
+DATASCRPT=/network/rit/home/sw651133/Wx-AQ/prepdata/scripts
+NOMADSHOME=/network/asrc/scratch/lulab/sw651133/nomads
+DEVSCRPT=/network/rit/home/sw651133/Wx-AQ_dev/prepdata/scripts
+
+30 03,09,15,21 * * * cd $DATASCRPT; sh $DATASCRPT/driver_pull.sh gfs obs >> $NOMADSHOME/logs/driver_gfs_obs.log
+50 03,09,15,21 * * * cd $DATASCRPT; sh $DATASCRPT/driver_pull.sh gfs grib2 >> $NOMADSHOME/logs/driver_gfs_grib2.log
+40 00,06,12,18 * * * cd $DATASCRPT; sh $DATASCRPT/driver_pull.sh gdas obs >> $NOMADSHOME/logs/driver_gdas_obs.log
+00 07 * * * cd $DEVSCRPT; sh $DEVSCRPT/driver_pull.sh chem finn >> $NOMADSHOME/logs/driver_chem_finn.log
+00 13 * * * cd $DEVSCRPT; sh $DEVSCRPT/driver_pull.sh chem waccm >> $NOMADSHOME/logs/driver_chem_waccm.log

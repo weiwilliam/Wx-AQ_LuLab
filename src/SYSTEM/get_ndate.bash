@@ -2,10 +2,11 @@
 
 # Find current date and time from the system (UTC)
 #################################################################
-syear=${1:0:4}
-smon=${1:4:2}
-sday=${1:6:2}
-shr=${1:8:2}
+hrinc=$1
+syear=${2:0:4}
+smon=${2:4:2}
+sday=${2:6:2}
+shr=${2:8:2}
 datein=`date -u --date="$smon/$sday/$syear $shr:00:00"`
 #################################################################
 #
@@ -18,4 +19,7 @@ emon=`date -d "$datein +6 hours" -u +%m`
 eday=`date -d "$datein +6 hours" -u +%d`
 ehr=`date -d "$datein +6 hours" -u +%H`
 
-echo $eyr$emon$eday$ehr
+dateout=`date +%Y%m%d%H -u -d "$datein $hrinc hours"`
+
+#echo $eyr$emon$eday$ehr
+echo $dateout

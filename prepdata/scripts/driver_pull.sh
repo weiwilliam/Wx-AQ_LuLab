@@ -3,14 +3,14 @@ set -x
 Eaddress=swei@albany.edu
 export dump=$1 # gdas or gfs
 export datatype=$2 # obs or grib2
-export prepdatahome=/network/rit/home/sw651133/Wx-AQ/prepdata
+export prepdatahome=${PWD}/..
 export scrptshome=${prepdatahome}/scripts
 export datapath=/network/asrc/scratch/lulab/sw651133/nomads
 export datatank=$datapath/$dump
 [[ ! -d $datatank ]]&&mkdir -p $datatank
 export logdir=$datapath/logs
 [[ ! -d $logdir ]]&&mkdir -p $logdir
-export wrktmp=$datapath/wrk.${dump}_${datatype}
+export wrktmp=$datapath/wrk/wrk.${dump}_${datatype}
 if [ ! -d $wrktmp ]; then
    mkdir -p $wrktmp
 else
@@ -52,6 +52,10 @@ case $dump in
       pdy=`$datecmd -ud "1 day ago" +%Y%m%d`
       cyc='18'
    fi ;;
+'chem')
+   # WACCM data is available near 12 UTC
+   # Prior day FINN data is available at 06 UTC
+   cyc='00' ;;
 esac
 
 export CDATE=${pdy}${cyc}
@@ -63,7 +67,7 @@ cyy=`echo $CDATE | cut -c1-4`
 cdd=`echo $CDATE | cut -c5-6`
 cmm=`echo $CDATE | cut -c7-8`
 chh=`echo $CDATE | cut -c9-10`
-PURGE_DATE=`$datecmd -ud "1 week ago ${cyy}-${cdd}-${cmm} ${chh}:00:00" +%Y%m%d%H%M`
+PURGE_DATE=`$datecmd -ud "2 week ago ${cyy}-${cdd}-${cmm} ${chh}:00:00" +%Y%m%d%H%M`
 echo "Testing Purge cycle: $PURGE_DATE"
 #purge_pdy=`echo $PURGE_DATE | cut -c1-8`
 #purge_cyc=`echo $PURGE_DATE | cut -c9-10`
@@ -79,6 +83,10 @@ case $datatype in
    scrpts=$scrptshome/pull_obs.sh ;;
 'grib2')
    scrpts=$scrptshome/pull_grib2.sh ;;
+'waccm')
+   scrpts=$scrptshome/pull_waccm.sh ;;
+'finn')
+   scrpts=$scrptshome/pull_finn.sh ;;
 esac
 
 sh $scrpts $dump $CDATE > $logdir/log.${dump}_${datatype}.${CDATE} 2>&1
