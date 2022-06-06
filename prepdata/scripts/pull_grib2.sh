@@ -2,6 +2,7 @@
 set -x
 dump=$1
 CDATE=${CDATE:-$2}
+PURGE_DATE=${PURGE_DATE:-$3}
 datapath=${datapath:-/network/asrc/scratch/lulab/sw651133/nomads}
 datatank=${datatank:-$datapath/$dump}
 logdir=${logdir:-$datapath/logs}
@@ -104,6 +105,13 @@ fi
 else
    echo "!!!Error!!! no grb2filelist available, something wrong"
    exit 3
+fi
+
+#Purge data
+echo "Purging cycle: $PURGE_DATE"
+if [ -d $target_dir ]; then
+   echo "Removing $target_dir"
+   rm -rf $target_dir
 fi
 
 echo "Finish time: `$datecmd -u`"

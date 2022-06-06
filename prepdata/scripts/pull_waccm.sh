@@ -2,6 +2,7 @@
 set -x
 dump=$1
 CDATE=${CDATE:-$2}
+PURGE_DATE=${PURGE_DATE:-$3}
 datapath=${datapath:-/network/asrc/scratch/lulab/sw651133/nomads}
 datatank=${datatank:-$datapath/$dump}
 logdir=${logdir:-$datapath/logs}
@@ -70,6 +71,18 @@ if [ -s $wrktmp/waccmfilelist ];then
 else
    echo "!!!Error!!! no waccmfilelist available, something wrong"
    exit 3
+fi
+
+#Purge data
+echo "Purging cycle: $PURGE_DATE"
+cd $target_dir
+p_y4=${PURGE_DATE:0:4}
+p_m2=${PURGE_DATE:4:2}
+p_d2=${PURGE_DATE:6:2}
+purge_file=$target_dir/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.${p_y4}-${p_m2}-${p_d2}-00000.nc
+if [ -s $purge_file ]; then
+   echo "Removing $purge_file"
+   rm -rf $purge_file
 fi
 
 echo "Finish time: `$datecmd -u`"
