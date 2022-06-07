@@ -67,16 +67,12 @@ cyy=`echo $CDATE | cut -c1-4`
 cdd=`echo $CDATE | cut -c5-6`
 cmm=`echo $CDATE | cut -c7-8`
 chh=`echo $CDATE | cut -c9-10`
-PURGE_DATE=`$datecmd -ud "2 week ago ${cyy}-${cdd}-${cmm} ${chh}:00:00" +%Y%m%d%H%M`
-echo "Testing Purge cycle: $PURGE_DATE"
-#purge_pdy=`echo $PURGE_DATE | cut -c1-8`
-#purge_cyc=`echo $PURGE_DATE | cut -c9-10`
-#if [ -d $datatank/$dump/${dump}.${purge_pdy}/${purge_cyc} ]; then
-#   rm -rf $datatank/$dump/${dump}.${purge_pdy}/${purge_cyc}
-#fi
-#if [ -s $logdir/log.${dump}_${datatype}.${PURGE_DATE} ]; then
-#   rm $logdir/log.${dump}_${datatype}.${PURGE_DATE}
-#fi
+PURGE_DATE=`$datecmd -ud "2 week ago ${cyy}-${cdd}-${cmm} ${chh}:00:00" +%Y%m%d%H`
+echo "Purging cycle: $PURGE_DATE"
+if [ -s $logdir/log.${dump}_${datatype}.${PURGE_DATE} ]; then
+   echo "Removing $logdir/log.${dump}_${datatype}.${PURGE_DATE}"
+   rm $logdir/log.${dump}_${datatype}.${PURGE_DATE}
+fi
 
 case $datatype in
 'obs')
@@ -89,7 +85,7 @@ case $datatype in
    scrpts=$scrptshome/pull_finn.sh ;;
 esac
 
-sh $scrpts $dump $CDATE > $logdir/log.${dump}_${datatype}.${CDATE} 2>&1
+sh $scrpts $dump $CDATE $PURGE_DATE > $logdir/log.${dump}_${datatype}.${CDATE} 2>&1
 
 rc=$?
 if [ $rc -ne 0 ]; then
@@ -102,7 +98,7 @@ else
 fi
 
 if [ $datatype == 'obs' ]; then
-   sh $scrptshome/append_nysm2bufr.sh $dump $CDATE
+   sh $scrptshome/append_nysm2bufr.sh $dump $CDATE >> $logdir/log.${dump}_${datatype}.${CDATE} 2>&1
    rc=$?
    if [ $rc -ne 0 ]; then
       echo "`$datecmd -u`: !Warning! $CDATE code:$rc"

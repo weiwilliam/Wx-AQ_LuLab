@@ -2,6 +2,7 @@
 set -x
 dump=$1
 CDATE=${CDATE:-$2}
+PURGE_DATE=${PURGE_DATE:-$3}
 datapath=${datapath:-/network/asrc/scratch/lulab/sw651133/nomads}
 datatank=${datatank:-$datapath/$dump}
 logdir=${logdir:-$datapath/logs}
@@ -82,6 +83,15 @@ else
    echo "`$datecmd -u` $CDATE Failed: data transfer failed" >> $cyc_logs
    exit 2
 fi
+
+# Purge the data if it exists
+p_jday=$(date +%Y%j -d "${PURGE_DATE:0:8}")
+echo "Purging jday: $p_jday"
+if [ -s $target_dir/GLOB_MOZ4_${p_jday}.txt ]; then
+   echo "Removing FINN data: $target_dir/GLOB_MOZ4_${p_jday}.txt"
+   rm $target_dir/GLOB_MOZ4_${p_jday}.txt
+fi
+
 
 echo "Finish time: `$datecmd -u`"
 exit 0

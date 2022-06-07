@@ -2,6 +2,7 @@
 set -x
 dump=$1
 CDATE=${CDATE:-$2}
+PURGE_DATE=${PURGE_DATE:-$3}
 datapath=${datapath:-/network/asrc/scratch/lulab/sw651133/nomads}
 datatank=${datatank:-$datapath/$dump}
 logdir=${logdir:-$datapath/logs}
@@ -26,6 +27,7 @@ fi
 
 nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
 #nomadspath="https://ftpprd.ncep.noaa.gov/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
+#nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/obsproc/prod/${dump}.${pdy}"
 remote_prepbufr=$nomadspath/${dump}.t${cyc}z.prepbufr.nr  
  local_prepbufr=$target_dir/${dump}.t${cyc}z.prepbufr.nr  
 echo $prepbufr
@@ -74,6 +76,17 @@ else
    echo "`$datecmd -u` $CDATE Failed: data transfer failed" >> $cyc_logs
    exit 2 
 fi
+
+#Purge data
+echo "Purging cycle: $PURGE_DATE"
+purge_pdy=${PURGE_DATE:0:8}
+purge_cyc=${PURGE_DATE:8:2}
+purge_dir=${datatank}/${dump}.${purge_pdy}/${purge_cyc}
+if [ -d $purge_dir ]; then
+   echo "Removing $purge_dir"
+   rm -rf $purge_dir
+fi
+
 
 echo "Finish time: `$datecmd -u`"
 exit 0
