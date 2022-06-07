@@ -89,7 +89,7 @@ p_jday=$(date +%Y%j -d "${PURGE_DATE:0:8}")
 echo "Purging jday: $p_jday"
 if [ -s $target_dir/GLOB_MOZ4_${p_jday}.txt ]; then
    echo "Removing FINN data: $target_dir/GLOB_MOZ4_${p_jday}.txt"
-   rm $target_dir/GLOB_MOZ4_${p_jdate}.txt
+   rm $target_dir/GLOB_MOZ4_${p_jday}.txt
 fi
 
 

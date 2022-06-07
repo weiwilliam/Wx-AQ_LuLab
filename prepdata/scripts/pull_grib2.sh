@@ -109,9 +109,12 @@ fi
 
 #Purge data
 echo "Purging cycle: $PURGE_DATE"
-if [ -d $target_dir ]; then
-   echo "Removing $target_dir"
-   rm -rf $target_dir
+purge_pdy=${PURGE_DATE:0:8}
+purge_cyc=${PURGE_DATE:8:2}
+purge_dir=${datatank}/${dump}.${purge_pdy}/${purge_cyc}
+if [ -d $purge_dir ]; then
+   echo "Removing $purge_dir"
+   rm -rf $purge_dir
 fi
 
 echo "Finish time: `$datecmd -u`"

@@ -67,7 +67,7 @@ cyy=`echo $CDATE | cut -c1-4`
 cdd=`echo $CDATE | cut -c5-6`
 cmm=`echo $CDATE | cut -c7-8`
 chh=`echo $CDATE | cut -c9-10`
-PURGE_DATE=`$datecmd -ud "2 week ago ${cyy}-${cdd}-${cmm} ${chh}:00:00" +%Y%m%d%H%M`
+PURGE_DATE=`$datecmd -ud "2 week ago ${cyy}-${cdd}-${cmm} ${chh}:00:00" +%Y%m%d%H`
 echo "Purging cycle: $PURGE_DATE"
 if [ -s $logdir/log.${dump}_${datatype}.${PURGE_DATE} ]; then
    echo "Removing $logdir/log.${dump}_${datatype}.${PURGE_DATE}"
