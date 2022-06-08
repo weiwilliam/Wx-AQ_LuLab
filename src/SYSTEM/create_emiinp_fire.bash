@@ -10,13 +10,18 @@ emon=${3:4:2}
 eday=${3:6:2}
 ehr=${3:8:2}
 
+#fire_directory = '/network/rit/lab/lulab/share_lib/WRF/Prep_EM/FINN/data_files/',
+#fire_filename  = 'GLOBAL_FINNv15_2018_MOZART_01022019.txt',
+
+
+
 fileo=$rundir/emi/fire/fire_emis_MOZCART_T1.inp
 cat << EOF > $fileo 
 
 &control
 domains        = 2,
-fire_directory = '/network/rit/lab/lulab/share_lib/WRF/Prep_EM/FINN/data_files/',
-fire_filename  = 'GLOBAL_FINNv15_2018_MOZART_01022019.txt',
+fire_directory = '$rundir/emi/fire/',
+fire_filename  = 'GLOB_MOZ4_previousday.txt',
 wrf_directory  = '$rundir/wrf/'
 start_date     = '${syear}-${smon}-${sday}',
 end_date       = '${eyear}-${emon}-${eday}',

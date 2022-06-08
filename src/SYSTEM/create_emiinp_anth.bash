@@ -37,8 +37,8 @@ cat << EOF > $fileo
  sub_categories(28:34)  = 'PMOTHR','PEC','POC','PMC','PSO4','PNO3','PNH4'
 
 
- start_output_time = '${syear}-${smon}-${sday}_${shr}:00:00'
- stop_output_time  = '${eyear}-${emon}-${eday}_${ehr}:00:00'
+ start_output_time = '2018-${smon}-${sday}_${shr}:00:00'
+ stop_output_time  = '2018-${emon}-${eday}_${ehr}:00:00'
  emissions_zdim_stag = 10
 
 

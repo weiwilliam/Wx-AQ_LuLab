@@ -15,10 +15,10 @@ datein=`date -u --date="$smon/$sday/$syear $shr:00:00"`
 
 if [ $shr -eq 00 ] 
 then
-  eyr=`date -d "$datein +36 hours" -u +%Y`
-  emon=`date -d "$datein +36 hours" -u +%m`
-  eday=`date -d "$datein +36 hours" -u +%d`
-  ehr=`date -d "$datein +36 hours" -u +%H`
+  eyr=`date -d "$datein +12 hours" -u +%Y`
+  emon=`date -d "$datein +12 hours" -u +%m`
+  eday=`date -d "$datein +12 hours" -u +%d`
+  ehr=`date -d "$datein +12 hours" -u +%H`
 else
   eyr=`date -d "$datein +12 hours" -u +%Y`
   emon=`date -d "$datein +12 hours" -u +%m`

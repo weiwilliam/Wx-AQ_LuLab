@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+#set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice, only 0 and 114 tested
@@ -45,16 +45,16 @@ elif [ $realtime -eq 0 ]; then
    ## Output ##
 #   runpath="/network/asrc/scratch/lulab/sw651133/wx-aq_test_chem0"
 #   outpath="/network/asrc/scratch/lulab/sw651133/wx-aq_out_chem0"
-   runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
-   outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
-#   runpath="/network/asrc/scratch/lulab/hluo/run"
- #  outpath="/network/rit/lab/lulab/hluo/out"
+   #runpath="/network/asrc/scratch/lulab/WRF-GSI-CASE"
+  # outpath="/network/rit/lab/lulab/WRF-GSI-CASE"
+   runpath="/network/asrc/scratch/lulab/hluo/run"
+   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2018080712" #10 digits time at every 6h; +6 hour forecast
-    last_date="2018080712"
+   first_date="2022051506" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022051600"
    prepbufr_suffix="nr"
    
-   LISTOS=1
+   LISTOS=0
    if [ $LISTOS -eq 1 ]; then
      num_metgrid_levels=32
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
@@ -200,7 +200,14 @@ while [ $sdate -le $last_date ]; do
 
     ## WRF/Chem input prep if chem_opt is not 0 ##
     if [ $chem_opt -ne 0 ]; then
-      sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt
+      sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $datpath
+    fi
+
+    error=$?
+    if [ ${error} -ne 0 ]; then
+      echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+      echo "Unsuccessful chem data preparation!." >> $logfile
+      exit ${error}
     fi
 
  
