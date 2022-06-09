@@ -8,6 +8,8 @@ edate=${4}
 num_metgrid_levels=${5}
 chem_opt=${6}
 datpath=${7}
+logfile=${8}
+
 syear=${3:0:4}
 smon=${3:4:2}
 sday=${3:6:2}
@@ -21,11 +23,17 @@ eday=${4:6:2}
 mkdir $rundir/emi
 
 ###################################################################### fire
-# Using previous day fire emi
+# Using most recent day fire emi for all fcst hours, by hour
 dateval=${3:0:8}
 
 yday=$(date +%F -d "$dateval -1 days")
 doym1=$(date -d $yday +%j)
+
+yday=$(date +%F -d "$dateval -2 days")
+doym2=$(date -d $yday +%j)
+
+yday=$(date +%F -d "$dateval -3 days")
+doym3=$(date -d $yday +%j)
 
 doy=$(date -d $dateval +%j)
 
@@ -34,20 +42,33 @@ doya1=$(date -d $yyday +%j)
 
 mkdir $rundir/emi/fire
 cd $rundir/emi/fire
-ln -sf  $datpath/chem/finn/GLOB_MOZ4_${syear}${doym1}.txt .
 ln -sf /network/rit/lab/lulab/WRF-GSI/src/EMI/FIRE/* .
 ln -sf $syspath/create_emiinp_fire.bash .
 ln -sf $syspath/run_emi_fire.sh .
 
-#if [ -f "/network/asrc/scratch/lulab/sw651133/nomads/chem/finn/GLOB_MOZ4_2022${dof}.txt" ] ; then
+if [ -f "$datpath/chem/finn/GLOB_MOZ4_${syear}${doym1}.txt" ] ; then
+  ln -sf  $datpath/chem/finn/GLOB_MOZ4_${syear}${doym1}.txt FINNdata.txt
+  echo "FINN used -1 day data" >> $logfile 
+elif [ -f "$datpath/chem/finn/GLOB_MOZ4_${syear}${doym2}.txt" ] ; then
+  ln -sf  $datpath/chem/finn/GLOB_MOZ4_${syear}${doym2}.txt FINNdata.txt
+  echo "FINN used -2 day data" >> $logfile
+elif [ -f "$datpath/chem/finn/GLOB_MOZ4_${syear}${doym3}.txt" ] ; then
+  ln -sf  $datpath/chem/finn/GLOB_MOZ4_${syear}${doym3}.txt FINNdata.txt
+  echo "FINN used -3 day data" >> $logfile
+else
+  echo "No suitable FINN data!" >> $logfile
+  exit 14
+fi
+
 # change previous doy to current
 # write header
-head -1 GLOB_MOZ4_${syear}${doym1}.txt > GLOB_MOZ4_previousday.txt
-# ignore first line and replace doy
-awk -F, 'NR>1 {$1='$doy'; print}' OFS=, GLOB_MOZ4_${syear}${doym1}.txt >> GLOB_MOZ4_previousday.txt
+head -1 FINNdata.txt > GLOB_MOZ4_previousday.txt
+# ignore first line and replace 1st col w doy 
+awk -F, 'NR>1 {$1='$doy'; print}' OFS=, FINNdata.txt >> GLOB_MOZ4_previousday.txt
 if [ $sday -ne $eday ]; then
-  ln -sf  $datpath/chem/finn/GLOB_MOZ4_${syear}${doy}.txt .
-  awk -F, 'NR>1 {$1='$doya1'; print}' OFS=, GLOB_MOZ4_${syear}${doy}.txt >> GLOB_MOZ4_previousday.txt
+  #ln -sf  $datpath/chem/finn/GLOB_MOZ4_${syear}${doy}.txt .
+  # ignore first line and replace 1st col w doya1
+  awk -F, 'NR>1 {$1='$doya1'; print}' OFS=, FINNdata.txt >> GLOB_MOZ4_previousday.txt
 fi
 
 sh create_emiinp_fire.bash $rundir $sdate $edate
@@ -92,10 +113,19 @@ ln -sf /network/rit/lab/lulab/WRF-GSI/src/EMI/ANTH/anthro_emis .
 cp $syspath/anth_change_year.ncl .
 cp $syspath/anth_rename.sh .
 ln -sf $syspath/create_emiinp_anth.bash .
+ln -sf $syspath/create_emiinp_anth4km.bash .
 ln -sf $syspath/run_emi_anth.sh .
 
+## 12km NEI for Domain 1
 sh create_emiinp_anth.bash $rundir $sdate $edate
-sh run_emi_anth.sh .
+sh run_emi_anth.sh . anthro_emis_2018_12km_MOZCART_T1.inp
+
+error=$?
+if [ ${error} -ne 0 ]; then
+  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+  echo "Unsuccessfuly run of 12km anth_emis for Domain 1." >> $logfile
+  exit ${error}
+fi
 
 # change emission year of 2018 to simulation year
 # possible problems for simulation across 2 different years
@@ -116,18 +146,46 @@ if [ ${syear} -ne 2018 ]; then
   done;
 fi
 
+cd $rundir/wrf
+cp $rundir/emi/anth/wrfchemi_d01* .
+
+
+## 4km NEI for Domain 2
+cd $rundir/emi/anth
+rm wrfchemi_*
+sh create_emiinp_anth4km.bash $rundir $sdate $edate
+sh run_emi_anth.sh . anthro_emis_2018_4km_MOZCART_T1.inp
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-  echo "Unsuccessfuly run of anth_emis." >> $logfile
+  echo "Unsuccessfuly run of 4km anth_emis for Domain 2." >> $logfile
   exit ${error}
+fi
+
+# change emission year of 2018 to simulation year
+# possible problems for simulation across 2 different years
+if [ ${syear} -ne 2018 ]; then
+# rename file
+  sed -i "s/year/$syear/g" anth_rename.sh
+  sh anth_rename.sh
+
+# change year in file
+  for file in `ls wrfchem*`;
+     do
+        domain=${file:10:2}
+        yy=${file:13:4}
+        mm=${file:18:2}
+        dd=${file:21:2}
+        hh=${file:24:2}
+        ncl domain=$domain yy=$yy mm=$mm dd=$dd hh=$hh anth_change_year.ncl;
+  done;
 fi
 
 
 cd $rundir/wrf
-ln -sf $rundir/emi/anth/wrfchemi* .
-
-
+cp $rundir/emi/anth/wrfchemi_d02* .
+cd $rundir/emi/anth
+rm wrfchemi_*
 ###################################### mozart input files by mozcart_precessor
 mkdir $rundir/emi/mozcart
 cd $rundir/emi/mozcart
@@ -163,14 +221,14 @@ sh $syspath/create_namelist.input.bash $rundir $sdate $edate $num_metgrid_levels
 
 cd $rundir/wrf
 sh run_real.sh $rundir/wrf
-cp rsl.error.0000 rsl.error.0000.realchem
-cp rsl.out.0000 rsl.out.0000.realchem
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
   echo "Unsuccessfuly run of real.exe with chem on." >> $logfile
   exit ${error}
 fi
+cp rsl.error.0000 rsl.error.0000.realchem
+cp rsl.out.0000 rsl.out.0000.realchem
 
 
 ######################################### mozbc to prepapre BC if using MOZART chem option
@@ -178,11 +236,20 @@ fi
 mkdir $rundir/mozbc
 cd $rundir/mozbc
 mozbcdir="$rundir/mozbc"
-#if [ -f "/network/asrc/scratch/lulab/sw651133/nomads/chem/finn/GLOB_MOZ4_2022${dof}.txt" ] ; then
-# temp data for LISTOS test
-ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc h0001.nc
+if [ -f "$datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc" ] ; then
+  ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc h0001.nc
+else
+  echo "WACCM data unavailable for $syear-$smon-$sday !" >> $logfile
+  exit 15
+fi
+
 if [ $sday -ne $eday ]; then
-  ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc h0002.nc
+ if [ -f "$datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc" ] ; then 
+   ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc h0002.nc
+ else
+   echo "WACCM data unavailable for $eyear-$emon-$eday !" >> $logfile
+   exit 16
+ fi
 fi
 #cp $rundir/wps/met_em* .
 #cp $rundir/wrf/wrfin* .

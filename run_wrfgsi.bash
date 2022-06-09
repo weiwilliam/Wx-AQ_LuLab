@@ -50,8 +50,8 @@ elif [ $realtime -eq 0 ]; then
    runpath="/network/asrc/scratch/lulab/hluo/run"
    outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2022051506" #10 digits time at every 6h; +6 hour forecast
-    last_date="2022051600"
+   first_date="2022052900" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022053100"
    prepbufr_suffix="nr"
    
    LISTOS=0
@@ -200,7 +200,12 @@ while [ $sdate -le $last_date ]; do
 
     ## WRF/Chem input prep if chem_opt is not 0 ##
     if [ $chem_opt -ne 0 ]; then
-      sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $datpath
+	if [ $LISTOS -eq 1 ]; then
+	   sh $syspath/WRFCHEM_INPUTLISTOS.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $datpath $logfile
+	else 
+	   sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $datpath $logfile
+
+   	fi
     fi
 
     error=$?
