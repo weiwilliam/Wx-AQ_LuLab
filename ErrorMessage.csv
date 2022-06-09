@@ -1,0 +1,23 @@
+﻿Error Code,Error Message in Logfile,Error Message on Screen,Script name and related modules,Check Point,To-do and note
+1,Run directory already exists. See details in create_case.bash. ,Error: $rundir already exists.,create_case.bash,Run directory name already exists.,Rename existed and then make new directory/remove error but display notes.
+2,Unsuccessful run of geogrid.exe.,Error: Unsuccessful run of ${JOBNAME}.,run_geogrid.sh ,Unable to grep “successful” in geogrid.log.0000. ,Different for WRF4.3.
+3,Unsuccessful run of ungrib.exe.,Error: Unsuccessful run of ${JOBNAME}.,run_ungrib.sh,Unable to grep “successful” in ungrib.log. ,
+4,Unsuccessful run of metgrid.exe.,Error: Unsuccessful run of ${JOBNAME}.,run_metgrid.sh,Unable to grep “successful” in metgrid.log.0000. ,
+5,Unsuccessful run of real.exe (with chem on).,Error: Unsuccessful run of ${JOBNAME}.,run_real.sh ,Unable to grep “SUCCESS” in rsl.error.0000. ,
+6,Unsuccessful run of gsi.x.,Error: Timeout ${JOBNAME}.,datacheck_gsi.sh,Unable to grep “wrf_inout” in the gsi/realtime directory.,To be merged to run_gsi
+7,Unsuccessful run of da_update_bc.exe.,Error: Unsuccessful run of ${JOBNAME}.,run_lbc.sh,Unable to grep “Update_bc completed successfully” in lateralBC.log. ,
+8,Unsuccessful run of wrf.exe.,Error: Unsuccessful run of ${JOBNAME}.,run_wrf.sh,Unable to grep “SUCCESS” in rsl.error.0000. ,
+10,GFS data not found by datacheck_gfs.sh.,Error: GFS data not found.,datacheck_gfs.sh,Unable to grep “Succeed” in cyclelist.gfs_grib2.out.,Some minor bugs.
+11,GFS data not found by datacheck_gfs.sh.,Error: GFS data failed.,datacheck_gfs.sh,Grep “Failed” in cyclelist.gfs_grib2.out.,Some minor bugs.
+12,"WARNING: GDAS data not found. Thus, $sdate is now the FIRST CYCLE.",Warning: GDAS data timeout.,datacheck_gdas.sh,Unable to grep “Succeed” in cyclelist.gdas_obs.out.,Some minor bugs.
+13,"WARNING: GDAS data not found. Thus, $sdate is now the FIRST CYCLE.",Warning: GDAS data failed.,datacheck_gdas.sh,Grep “Failed” in cyclelist.gdas_obs.out.,Some minor bugs.
+14,No suitable FINN data!,,WRFCHEM_INPUT.bash,Cannot find FINN from 3 previous days,
+15,WACCM data unavailable for $syear-$smon-$sday !,,WRFCHEM_INPUT.bash,Cannot find start date WACCM data,
+16,WACCM data unavailable for $eyear-$emon-$eday !,,WRFCHEM_INPUT.bash,Cannot find end date WACCM data,
+20,Unsuccessful run of megan_bio_emiss.,Error: Timeout ${JOBNAME}.,run_emi_megan.sh,Unable to grep “ wrfbiochemi_d02” in the emi/megan directory.,
+21,Unsuccessful run of anthro_emis.,Error: Unsuccessful run of ${JOBNAME}.,run_emi_anth.sh,Unable to grep “successful” in anthro_emis.out. ,
+22,Unsuccessful run of fire_emis.,Error: Unsuccessful run of ${JOBNAME}.,run_emi_fire.sh,Unable to grep “successful” in fire_emis.out.,
+23,Unsuccessful run of exo_coldens.,Error: Unsuccessful run of ${JOBNAME}.,run_emi_exo_coldens.sh,Unable to grep “successful” in exo_coldens.out.,
+24,Unsuccessful run of wesely.,Error: Unsuccessful run of ${JOBNAME}.,run_emi_wesely.sh,Unable to grep “successful” in wesely.out.,
+25,Unsuccessful run of mozbc for Domain 2.,Error: Unsuccessful run of ${JOBNAME}.,run_emi_mozbc.sh,"Unable to grep “bc_wrfchem completed successfully"" in mozbc.out.",
+25,Unsuccessful run of mozbc for Domain 1.,Error: Unsuccessful run of ${JOBNAME}.,run_emi_mozbc.sh,"Unable to grep “bc_wrfchem completed successfully"" in mozbc.out.",
