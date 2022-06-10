@@ -9,16 +9,17 @@ eyear=${3:0:4}
 emon=${3:4:2}
 eday=${3:6:2}
 ehr=${3:8:2}
-num_metgrid_levels=${4}
-chemopt=${5}
+rhr=${4}
+num_metgrid_levels=${5}
+chemopt=${6}
 
-if [ $shr -eq 00 ]
-then
-   # Update the rhr with other variables in run_wrfgsi.bash
-   rhr=6
-else
-   rhr=6
-fi
+#if [ $shr -eq 00 ]
+#then
+#   # Update the rhr with other variables in run_wrfgsi.bash
+#   rhr=6
+#else
+#   rhr=6
+#fi
 
 case $chemopt in
 114)
@@ -41,7 +42,7 @@ case $chemopt in
  photdt                              = 30,     30,   30,
  chemdt                              = 2,     1,   0.5,
  emiss_inpt_opt                      = 102,    102,  111, ! from T1-MOZCART user guide
- emiss_opt                           = 8,     8,    8,
+ emiss_opt                           = 11,     11,    11,
  io_style_emissions                  = 2,
  chem_in_opt                         = 0,     0,    0,
  phot_opt                            = 3,      3,    3,
@@ -63,7 +64,7 @@ case $chemopt in
  seas_opt                            = 2,
  dust_opt                            = 3,
  dmsemis_opt                         = 1,
- biomass_burn_opt                    = 2,      2,     2,
+ biomass_burn_opt                    = 4,      4,     4,
  plumerisefire_frq                   = 60,     60,    60,
  have_bcs_chem                       = .true., .true., .true.,
  have_bcs_upper                      = .false., .false., .false.,
@@ -79,7 +80,7 @@ case $chemopt in
   chem=""
   ;; 
 *)
-  echo "Not supported chem_opt"
+  echo "Not supported chem_opt: $chemopt"
   exit 31
 esac
 

@@ -23,10 +23,10 @@ cat > ./${SCRIPTNAME} << EOF
 #SBATCH --partition=kratos
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=1
-#SBATCH --ntasks=8
+#SBATCH --ntasks=${NP}
 #SBATCH --mem=96000
 #SBATCH --exclusive
-#SBATCH --time=01:00:00
+#SBATCH --time=00:15:00
 ulimit -s unlimited
 $APRUN ${1}/lbc/${EXE} > ${CKFILE} 2>&1
 EOF

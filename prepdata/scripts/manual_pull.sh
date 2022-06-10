@@ -1,17 +1,17 @@
 #!/bin/ksh
 set -x
 Eaddress=swei@albany.edu
-export dump=$1 # gdas or gfs
-export datatype=$2 # obs or grib2
-export CDATE=$3
-export prepdatahome=/network/rit/home/sw651133/Wx-AQ/prepdata
+export dump=$1     # gdas, gfs  | chem
+export datatype=$2 # obs, grib2 | finn, waccm
+export CDATE=$3    # YYYYMMDDHH
+export prepdatahome=${PWD}/..
 export scrptshome=${prepdatahome}/scripts
 export datapath=/network/asrc/scratch/lulab/sw651133/nomads
 export datatank=$datapath/$dump
 [[ ! -d $datatank ]]&&mkdir -p $datatank
 export logdir=$datapath/logs
 [[ ! -d $logdir ]]&&mkdir -p $logdir
-export wrktmp=$datapath/mnl_wrk.${dump}_${datatype}
+export wrktmp=$datapath/wrk/mnl_wrk.${dump}_${datatype}
 if [ ! -d $wrktmp ]; then
    mkdir -p $wrktmp
 else
@@ -32,25 +32,25 @@ cyy=`echo $CDATE | cut -c1-4`
 cdd=`echo $CDATE | cut -c5-6`
 cmm=`echo $CDATE | cut -c7-8`
 chh=`echo $CDATE | cut -c9-10`
-PURGE_DATE=`$datecmd -ud "1 week ago ${cyy}-${cdd}-${cmm} ${chh}:00:00" +%Y%m%d%H%M`
-echo "Testing Purge cycle: $PURGE_DATE"
-#purge_pdy=`echo $PURGE_DATE | cut -c1-8`
-#purge_cyc=`echo $PURGE_DATE | cut -c9-10`
-#if [ -d $datatank/$dump/${dump}.${purge_pdy}/${purge_cyc} ]; then
-#   rm -rf $datatank/$dump/${dump}.${purge_pdy}/${purge_cyc}
-#fi
-#if [ -s $logdir/log.${dump}_${datatype}.${PURGE_DATE} ]; then
-#   rm $logdir/log.${dump}_${datatype}.${PURGE_DATE}
-#fi
+PURGE_DATE=`$datecmd -ud "2 week ago ${cyy}-${cdd}-${cmm} ${chh}:00:00" +%Y%m%d%H`
+echo "Purging cycle: $PURGE_DATE"
+if [ -s $logdir/log.${dump}_${datatype}.${PURGE_DATE} ]; then
+   echo "Removing $logdir/log.${dump}_${datatype}.${PURGE_DATE}"
+   rm $logdir/log.${dump}_${datatype}.${PURGE_DATE}
+fi
 
 case $datatype in
 'obs')
    scrpts=$scrptshome/pull_obs.sh ;;
 'grib2')
    scrpts=$scrptshome/pull_grib2.sh ;;
+'waccm')
+   scrpts=$scrptshome/pull_waccm.sh ;;
+'finn')
+   scrpts=$scrptshome/pull_finn.sh ;;
 esac
 
-sh $scrpts $dump $CDATE > $logdir/log.${dump}_${datatype}.${CDATE} 2>&1
+sh $scrpts $dump $CDATE $PURGE_DATE > $logdir/log.${dump}_${datatype}.${CDATE} 2>&1
 
 rc=$?
 if [ $rc -ne 0 ]; then
@@ -63,7 +63,7 @@ else
 fi
 
 if [ $datatype == 'obs' ]; then
-   sh $scrptshome/append_nysm2bufr.sh $dump $CDATE
+   sh $scrptshome/append_nysm2bufr.sh $dump $CDATE >> $logdir/log.${dump}_${datatype}.${CDATE} 2>&1
    rc=$?
    if [ $rc -ne 0 ]; then
       echo "`$datecmd -u`: !Warning! $CDATE code:$rc"

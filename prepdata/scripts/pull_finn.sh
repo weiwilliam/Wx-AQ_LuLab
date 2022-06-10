@@ -13,24 +13,24 @@ datecmd=`which date`
 wgetcmd=`which wget`
 waittime=300 #check interval (in second)
 maxtry=12    #max try
+freq=1      
+fdaymax=10
 
 echo "Start time: `$datecmd -u`"
 # Create the target cycle and local folder
 echo "Pulling cycle: ${CDATE}"
 pdy=`echo $CDATE | cut -c1-8`
 cyc=`echo $CDATE | cut -c9-10`
-cyc_logs=$logdir/cyclelist.${dump}_obs.out
-target_dir=${datatank}/${dump}.${pdy}/${cyc}
+cyc_logs=$logdir/cyclelist.${dump}_finn.out
+target_dir=${datatank}/finn
 if [ ! -d $target_dir ]; then
    mkdir -p $target_dir
 fi
 
-nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
-#nomadspath="https://ftpprd.ncep.noaa.gov/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
-#nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/obsproc/prod/${dump}.${pdy}"
-remote_prepbufr=$nomadspath/${dump}.t${cyc}z.prepbufr.nr  
- local_prepbufr=$target_dir/${dump}.t${cyc}z.prepbufr.nr  
-echo $prepbufr
+finnpath="https://www.acom.ucar.edu/acresp/MODELING/finn_emis_txt"
+
+jdate=$(date +%Y%j -d "${CDATE:0:8} -1 days")
+remote_finngz=$finnpath/GLOB_MOZ4_${jdate}.txt.gz
 
 # Check the availability on nomads
 rc=1
@@ -38,14 +38,14 @@ ntry=0
 until [ $rc -eq 0 ]; do
    ntry=$((ntry+1))
    echo "Check #$ntry"
-   $wgetcmd --spider $remote_prepbufr
+   $wgetcmd --spider $remote_finngz
    rc=$?
    [[ $rc -ne 0 ]]&&sleep $waittime
    if [[ $ntry -eq $maxtry ]]; then
       echo "Current time: `$datecmd -u`"
       echo "!!!Error!!! Data is not available after $((ntry*waittime)) seconds"
       echo "`$datecmd -u` $CDATE Failed: data not available" >> $cyc_logs
-      exit 1 
+      exit 1
    fi
 done
 
@@ -57,7 +57,7 @@ ntry=0
 flag=0
 until [ $ntry -eq 2 ];do
    ntry=$((ntry+1))
-   $wgetcmd -N $remote_prepbufr -O $local_prepbufr
+   $wgetcmd -N $remote_finngz
    rc=$?
    if [ $rc -eq 0 ]; then
       echo "   Try #$ntry: Good" >> $cyc_logs
@@ -69,22 +69,27 @@ until [ $ntry -eq 2 ];do
 done
 
 if [ $flag -eq 1 ]; then
+   if [ -s $wrktmp/GLOB_MOZ4_${jdate}.txt.gz ]; then
+      cd $wrktmp
+      gunzip GLOB_MOZ4_${jdate}.txt.gz
+   fi
+   if [ -s $wrktmp/GLOB_MOZ4_${jdate}.txt ]; then
+      mv $wrktmp/GLOB_MOZ4_${jdate}.txt $target_dir
+   fi
    echo "`$datecmd -u` $CDATE Succeed" >> $cyc_logs
 else
    echo "Current time: `$datecmd -u`"
    echo "!!!Error!!! Data transfer failed $ntry times ($((ntry*60)) seconds)"
    echo "`$datecmd -u` $CDATE Failed: data transfer failed" >> $cyc_logs
-   exit 2 
+   exit 2
 fi
 
-#Purge data
-echo "Purging cycle: $PURGE_DATE"
-purge_pdy=${PURGE_DATE:0:8}
-purge_cyc=${PURGE_DATE:8:2}
-purge_dir=${datatank}/${dump}.${purge_pdy}/${purge_cyc}
-if [ -d $purge_dir ]; then
-   echo "Removing $purge_dir"
-   rm -rf $purge_dir
+# Purge the data if it exists
+p_jday=$(date +%Y%j -d "${PURGE_DATE:0:8}")
+echo "Purging jday: $p_jday"
+if [ -s $target_dir/GLOB_MOZ4_${p_jday}.txt ]; then
+   echo "Removing FINN data: $target_dir/GLOB_MOZ4_${p_jday}.txt"
+   rm $target_dir/GLOB_MOZ4_${p_jday}.txt
 fi
 
 
