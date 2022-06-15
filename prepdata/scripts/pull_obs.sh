@@ -25,10 +25,9 @@ if [ ! -d $target_dir ]; then
    mkdir -p $target_dir
 fi
 
-nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
-#nomadspath="https://ftpprd.ncep.noaa.gov/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
-#nomadspath="https://nomads.ncep.noaa.gov/pub/data/nccf/com/obsproc/prod/${dump}.${pdy}"
-remote_prepbufr=$nomadspath/${dump}.t${cyc}z.prepbufr.nr  
+nomadspath1="https://nomads.ncep.noaa.gov/pub/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
+nomadspath2="https://ftpprd.ncep.noaa.gov/data/nccf/com/gfs/prod/${dump}.${pdy}/${cyc}/atmos"
+nomadspath3="https://nomads.ncep.noaa.gov/pub/data/nccf/com/obsproc/prod/${dump}.${pdy}"
  local_prepbufr=$target_dir/${dump}.t${cyc}z.prepbufr.nr  
 echo $prepbufr
 
@@ -38,8 +37,13 @@ ntry=0
 until [ $rc -eq 0 ]; do
    ntry=$((ntry+1))
    echo "Check #$ntry"
-   $wgetcmd --spider $remote_prepbufr
-   rc=$?
+   for path in $nomadspath1 $nomadspath2 $nomadspath3
+   do
+       remote_prepbufr=$path/${dump}.t${cyc}z.prepbufr.nr  
+       $wgetcmd --spider $remote_prepbufr
+       rc=$?
+       [[ $rc -eq 0 ]]
+   done
    [[ $rc -ne 0 ]]&&sleep $waittime
    if [[ $ntry -eq $maxtry ]]; then
       echo "Current time: `$datecmd -u`"
@@ -85,6 +89,10 @@ purge_dir=${datatank}/${dump}.${purge_pdy}/${purge_cyc}
 if [ -d $purge_dir ]; then
    echo "Removing $purge_dir"
    rm -rf $purge_dir
+   if [ $purge_cyc -eq 18 ];then
+      echo "Removing ${datatank}/${dump}.${purge_pdy}"
+      rm -rf ${datatank}/${dump}.${purge_pdy}
+   fi
 fi
 
 
