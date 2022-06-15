@@ -115,6 +115,10 @@ purge_dir=${datatank}/${dump}.${purge_pdy}/${purge_cyc}
 if [ -d $purge_dir ]; then
    echo "Removing $purge_dir"
    rm -rf $purge_dir
+   if [ $purge_cyc -eq 18 ];then
+      echo "Removing ${datatank}/${dump}.${purge_pdy}"
+      rm -rf ${datatank}/${dump}.${purge_pdy}
+   fi
 fi
 
 echo "Finish time: `$datecmd -u`"
