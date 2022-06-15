@@ -258,6 +258,8 @@ ln -sf $rundir/wps/met_em* .
 ln -sf $rundir/wrf/wrfin* .
 ln -sf $rundir/wrf/wrfbdy* .
 
+##BACKUP MOZBC that address Issue 36
+#ln -sf /network/rit/lab/lulab/sw651133/mozbc/mozbc .
 ln -sf /network/rit/lab/lulab/WRF-GSI/src/EMI/MOZBC/* .
 ln -sf $syspath/create_emiinp_mozbc.bash .
 ln -sf $syspath/run_emi_mozbc.sh .

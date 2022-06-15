@@ -3,8 +3,9 @@
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice, only 0 and 114 tested
-chem_opt=0
-realtime=0 
+chem_opt=1
+realtime=1 
+LISTOS=0
 da_doms="1 2"
 major_rhr=12
 cycle_rhr=6
@@ -13,7 +14,8 @@ major_cycle_list="00"
 # define your own path for $obsdir, $datpath, $runpath, $outpath below.
 
 ## Set Environment ##
-topdir=$PWD 
+#topdir=$PWD 
+topdir="/network/rit/home/dg771199/git/NRTCHEM/Wx-AQ_LuLab"
 syspath="$topdir/src/SYSTEM"
 # Define your folders of installed packages
 # A clean alternative WRF installation tested on Kratos
@@ -31,12 +33,13 @@ if [ $realtime -eq 1 ]; then
    obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
    datpath="/network/asrc/scratch/lulab/sw651133/nomads"
    ## Output ##
-   runpath="/network/asrc/scratch/lulab/WRF-GSI-NRT"
-   outpath="/network/rit/lab/lulab/WRF-GSI-NRT"
+   runpath="/network/asrc/scratch/lulab/dg771199/WRFChem-GSIMes"
+   outpath="/network/rit/lab/lulab/dg771199/WRFChem-GSIMes"
    logpath="$outpath/log"
-   prepbufr_suffix="nr"
+   prepbufr_suffix="nr.nysmsfc"
    ## Start Date for NRT run ##
    sdate=`sh ${syspath}/get_sdate.bash`
+   #sdate=2022061006
 
 elif [ $realtime -eq 0 ]; then
    ################################START of test/retro control ############################
@@ -57,7 +60,6 @@ elif [ $realtime -eq 0 ]; then
     last_date="2022053100"
    prepbufr_suffix="nr"
    
-   LISTOS=0
    if [ $LISTOS -eq 1 ]; then
      num_metgrid_levels=32
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
