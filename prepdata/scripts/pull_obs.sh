@@ -42,7 +42,7 @@ until [ $rc -eq 0 ]; do
        remote_prepbufr=$path/${dump}.t${cyc}z.prepbufr.nr  
        $wgetcmd --spider $remote_prepbufr
        rc=$?
-       [[ $rc -eq 0 ]]
+       [[ $rc -eq 0 ]]&&break
    done
    [[ $rc -ne 0 ]]&&sleep $waittime
    if [[ $ntry -eq $maxtry ]]; then
