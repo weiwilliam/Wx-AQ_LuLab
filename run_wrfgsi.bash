@@ -3,10 +3,10 @@
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice, only 0 and 114 tested
-chem_opt=0
+chem_opt=114
 realtime=0 
 da_doms="1 2"
-major_rhr=12
+major_rhr=6
 cycle_rhr=6
 major_cycle_list="00"
 # When run retro case (realtime=0), please carefully 
@@ -53,9 +53,9 @@ elif [ $realtime -eq 0 ]; then
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
 #   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2022052900" #10 digits time at every 6h; +6 hour forecast
-    last_date="2022053100"
-   prepbufr_suffix="nr"
+   first_date="2022061100" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022061106"
+   prepbufr_suffix="nr.nysmsfc"
    
    LISTOS=0
    if [ $LISTOS -eq 1 ]; then
@@ -212,9 +212,9 @@ while [ $sdate -le $last_date ]; do
     ## WRF/Chem input prep if chem_opt is not 0 ##
     if [ $chem_opt -ne 0 ]; then
 	if [ $LISTOS -eq 1 ]; then
-	   sh $syspath/WRFCHEM_INPUTLISTOS.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $datpath $logfile
+	   sh $syspath/WRFCHEM_INPUTLISTOS.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $rhr $datpath $logfile
 	else 
-	   sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $datpath $logfile
+	   sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $rhr $datpath $logfile
 
    	fi
     fi

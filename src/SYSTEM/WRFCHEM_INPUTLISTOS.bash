@@ -6,6 +6,7 @@ sdate=${3}
 edate=${4}
 num_metgrid_levels=${5}
 chem_opt=${6}
+rhr=${7}
 
 mkdir $rundir/emi
 
@@ -103,7 +104,7 @@ ln -sf $rundir/emi/mozcart/wrf_season_wes_usgs_d* .
 
 
 ## run real w chem on
-sh $syspath/create_namelist.input.bash $rundir $sdate $edate $num_metgrid_levels $chem_opt
+sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels $chem_opt
 
 cd $rundir/wrf
 sh run_real.sh $rundir/wrf

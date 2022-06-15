@@ -7,8 +7,9 @@ sdate=${3}
 edate=${4}
 num_metgrid_levels=${5}
 chem_opt=${6}
-datpath=${7}
-logfile=${8}
+rhr=${7}
+datpath=${8}
+logfile=${9}
 
 syear=${3:0:4}
 smon=${3:4:2}
@@ -217,7 +218,7 @@ ln -sf $rundir/emi/mozcart/wrf_season_wes_usgs_d* .
 
 
 ################################################################ run real w chem on
-sh $syspath/create_namelist.input.bash $rundir $sdate $edate $num_metgrid_levels $chem_opt
+sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels $chem_opt
 
 cd $rundir/wrf
 sh run_real.sh $rundir/wrf
@@ -258,7 +259,8 @@ ln -sf $rundir/wps/met_em* .
 ln -sf $rundir/wrf/wrfin* .
 ln -sf $rundir/wrf/wrfbdy* .
 
-ln -sf /network/rit/lab/lulab/WRF-GSI/src/EMI/MOZBC/* .
+ln -sf /network/rit/lab/lulab/sw651133/mozbc/mozbc .
+#ln -sf /network/rit/lab/lulab/WRF-GSI/src/EMI/MOZBC/* .
 ln -sf $syspath/create_emiinp_mozbc.bash .
 ln -sf $syspath/run_emi_mozbc.sh .
 
