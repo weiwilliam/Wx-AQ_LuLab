@@ -8,7 +8,9 @@ SQFORMAT="%.10i %.9P %.25j %.8u %.8T %.10M %.10L %.3D %R"
 MPIRUN=`which mpirun`
 APRUN="/usr/bin/time $MPIRUN -np ${NP}"
 CKFILE="anthro_emis.out"
-INP="anthro_emis_2018_12km_MOZCART_T1.inp"
+#INP="anthro_emis_2018_12km_MOZCART_T1.inp"
+INP=${2}
+
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
 #SBATCH --partition=kratos

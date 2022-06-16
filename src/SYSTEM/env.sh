@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export PS1="\w->"
+#export PS1="\w->"
 export INTEL_LICENSE_FILE=/network/rit/lab/asrclab/opt/intel/licenses
 export ASRC_SOFTWARE="/network/rit/lab/asrclab/soft"
 export ASRC_VIZ="/network/rit/lab/asrclab/viz"

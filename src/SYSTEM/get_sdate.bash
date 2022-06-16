@@ -20,28 +20,28 @@ then
   #rday=`date -d "tomorrow" -u +%d`
   rhr=18
 fi
-if [ $chr -lt 22 ] && [ $chr -ge 16 ]
+if [ $chr -lt 22 ] && [ $chr -ge 18 ]
 then
    ryr=$cyr
    rmon=$cmon
    rday=$cday
    rhr=12
 fi
-if [ $chr -lt 16 ] && [ $chr -ge 10 ]
+if [ $chr -lt 18 ] && [ $chr -ge 14 ]
 then
    ryr=$cyr
    rmon=$cmon
    rday=$cday
    rhr=06
 fi
-if [ $chr -lt 10 ] && [ $chr -ge 4 ]
+if [ $chr -lt 14 ] && [ $chr -ge 11 ]
 then
    ryr=$cyr
    rmon=$cmon
    rday=$cday
    rhr=00
 fi
-if [ $chr -lt 4 ]
+if [ $chr -lt 10 ]
 then
    ryr=`date -d "yesterday" -u +%Y`
   rmon=`date -d "yesterday" -u +%m`

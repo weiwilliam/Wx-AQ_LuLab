@@ -1,19 +1,21 @@
 #!/bin/bash
-set -x
+#set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice, only 0 and 114 tested
-chem_opt=0
-realtime=0 
+chem_opt=114
+realtime=1 
+LISTOS=0
 da_doms="1 2"
-major_rhr=12
+major_rhr=6
 cycle_rhr=6
 major_cycle_list="00"
 # When run retro case (realtime=0), please carefully 
 # define your own path for $obsdir, $datpath, $runpath, $outpath below.
 
 ## Set Environment ##
-topdir=$PWD 
+#topdir=$PWD 
+topdir="/network/rit/home/dg771199/git/NRTCHEM/Wx-AQ_LuLab"
 syspath="$topdir/src/SYSTEM"
 # Define your folders of installed packages
 # A clean alternative WRF installation tested on Kratos
@@ -31,12 +33,13 @@ if [ $realtime -eq 1 ]; then
    obsdir="/network/asrc/scratch/lulab/sw651133/nomads/logs/"
    datpath="/network/asrc/scratch/lulab/sw651133/nomads"
    ## Output ##
-   runpath="/network/asrc/scratch/lulab/WRF-GSI-NRT"
-   outpath="/network/rit/lab/lulab/WRF-GSI-NRT"
+   runpath="/network/asrc/scratch/lulab/dg771199/WRFChem-GSIMes"
+   outpath="/network/rit/lab/lulab/dg771199/WRFChem-GSIMes"
    logpath="$outpath/log"
-   prepbufr_suffix="nr"
+   prepbufr_suffix="nr.nysmsfc"
    ## Start Date for NRT run ##
    sdate=`sh ${syspath}/get_sdate.bash`
+   #sdate=2022061006
 
 elif [ $realtime -eq 0 ]; then
    ################################START of test/retro control ############################
@@ -53,11 +56,10 @@ elif [ $realtime -eq 0 ]; then
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
 #   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2018071400" #10 digits time at every 6h; +6 hour forecast
-    last_date="2018071406"
-   prepbufr_suffix="nr"
+   first_date="2022061100" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022061106"
+   prepbufr_suffix="nr.nysmsfc"
    
-   LISTOS=1
    if [ $LISTOS -eq 1 ]; then
      num_metgrid_levels=32
      gfssource="/network/rit/lab/josephlab/LIN/WORK/DATA/WRF-ICBC/GFS_180714_180817"
@@ -211,7 +213,19 @@ while [ $sdate -le $last_date ]; do
 
     ## WRF/Chem input prep if chem_opt is not 0 ##
     if [ $chem_opt -ne 0 ]; then
-      sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt
+	if [ $LISTOS -eq 1 ]; then
+	   sh $syspath/WRFCHEM_INPUTLISTOS.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $rhr $datpath $logfile
+	else 
+	   sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $rhr $datpath $logfile
+
+   	fi
+    fi
+
+    error=$?
+    if [ ${error} -ne 0 ]; then
+      echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+      echo "Unsuccessful chem data preparation!." >> $logfile
+      exit ${error}
     fi
 
  

@@ -4,6 +4,8 @@ mozdir=${1}
 do_bc=${2}
 domain=${3}
 
+cd $mozdir
+
 fileo=$mozdir/MOZCART_T1_LISTOS.inp
 #fileo=$rundir/emi/mozbc/MOZCART_T1_LISTOS.inp
 cat << EOF > $fileo 
@@ -13,8 +15,8 @@ cat << EOF > $fileo
 do_bc     = $do_bc
 do_ic     = .true.
 domain    = $domain
-dir_wrf = '$mozdir/'
-dir_moz = '$mozdir/'
+dir_wrf = './'
+dir_moz = './'
 fn_moz  = 'h0001.nc'
 def_missing_var = .true.
 moz_var_suffix = ''
