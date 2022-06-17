@@ -4,7 +4,7 @@
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice, only 0 and 114 tested
 chem_opt=114
-realtime=1 
+realtime=0 
 LISTOS=0
 da_doms="1 2"
 major_rhr=6
@@ -14,8 +14,7 @@ major_cycle_list="00"
 # define your own path for $obsdir, $datpath, $runpath, $outpath below.
 
 ## Set Environment ##
-#topdir=$PWD 
-topdir="/network/rit/home/dg771199/git/NRTCHEM/Wx-AQ_LuLab"
+topdir=$PWD 
 syspath="$topdir/src/SYSTEM"
 # Define your folders of installed packages
 # A clean alternative WRF installation tested on Kratos
@@ -39,7 +38,6 @@ if [ $realtime -eq 1 ]; then
    prepbufr_suffix="nr.nysmsfc"
    ## Start Date for NRT run ##
    sdate=`sh ${syspath}/get_sdate.bash`
-   #sdate=2022061006
 
 elif [ $realtime -eq 0 ]; then
    ################################START of test/retro control ############################
@@ -56,8 +54,8 @@ elif [ $realtime -eq 0 ]; then
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
 #   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2022061100" #10 digits time at every 6h; +6 hour forecast
-    last_date="2022061106"
+   first_date="2022061300" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022061306"
    prepbufr_suffix="nr.nysmsfc"
    
    if [ $LISTOS -eq 1 ]; then
@@ -260,6 +258,8 @@ while [ $sdate -le $last_date ]; do
        fi
        convinfotag=`echo ${prepbufr_suffix#nr} | sed -e 's/\./_/g'`
        convinfo=global_convinfo${convinfotag}.txt
+       
+       echo "GSI is assimilating ${prepbufr_file} with ${convinfo} at domain $da_doms" >> $logfile
            
        for d in $da_doms
        do
