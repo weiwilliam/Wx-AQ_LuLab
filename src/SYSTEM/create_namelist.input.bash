@@ -105,7 +105,7 @@ cat << EOF > $fileo
  end_hour                            = $ehr,    $ehr,   00,
  interval_seconds                    = 21600
  input_from_file                     = .true.,.true.,.true.,
- history_interval                    =   60,   60,   60,
+ history_interval                    = 360,   60,   60,
  frames_per_outfile                  =    1,    1,   1,
  restart                             = .false.,
  restart_interval                    = 7200,

@@ -7,15 +7,19 @@ chem_opt=114
 realtime=1 
 LISTOS=0
 da_doms="1 2"
-major_rhr=6
+major_rhr=36
 cycle_rhr=6
 major_cycle_list="00"
 # When run retro case (realtime=0), please carefully 
 # define your own path for $obsdir, $datpath, $runpath, $outpath below.
 
 ## Set Environment ##
-#topdir=$PWD 
-topdir="/network/rit/home/dg771199/git/NRTCHEM/Wx-AQ_LuLab"
+if [ $realtime -eq 1 ]; then
+##Must specific directory since cron is not calling program from dir with exe.
+   topdir="/network/rit/home/dg771199/git/NRTCHEM/Wx-AQ_LuLab"
+else
+   topdir=$PWD 
+fi
 syspath="$topdir/src/SYSTEM"
 # Define your folders of installed packages
 # A clean alternative WRF installation tested on Kratos
@@ -34,12 +38,13 @@ if [ $realtime -eq 1 ]; then
    datpath="/network/asrc/scratch/lulab/sw651133/nomads"
    ## Output ##
    runpath="/network/asrc/scratch/lulab/dg771199/WRFChem-GSIMes"
-   outpath="/network/rit/lab/lulab/dg771199/WRFChem-GSIMes"
-   logpath="$outpath/log"
+   outpath="/network/rit/lab/lulab/NRT-OUT/MODELOUT"
+   #outpath="/network/rit/lab/lulab/dg771199/WRFChem-GSIMes"
+   logpath="/network/rit/lab/lulab/NRT-OUT/LOG"
+   imgpath="/network/rit/lab/lulab/NRT-OUT/IMG"
    prepbufr_suffix="nr.nysmsfc"
    ## Start Date for NRT run ##
    sdate=`sh ${syspath}/get_sdate.bash`
-   #sdate=2022061006
 
 elif [ $realtime -eq 0 ]; then
    ################################START of test/retro control ############################
@@ -132,9 +137,14 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
     
+    ## Given the longer WRFChem times, check to see if 6 hour wrfout from prevoius cycle complete for cycle
+    pyr=${pdate:0:4}
+    pmon=${pdate:4:2}
+    pday=${pdate:6:2}
+    phr=${pdate:8:2}
+    if [ ! -f $runpath/$pdate/wrf/wrfout_d01_${pyr}-${pmon}-${pday}_${phr}:00:00 ]; then
     ## First Cycle Check ## 
-    if [ ! -d $outpath/wrfgsi.out.$pdate ]
-    then
+    #if [ ! -d $outpath/wrfgsi.out.$pdate ]; then
        firstrun=1
        echo "WRF-GSI: FIRST CYCLE" >> $logfile
     else
@@ -290,7 +300,7 @@ while [ $sdate -le $last_date ]; do
     fi
     
     ## WRF ##
-    sh run_wrf.sh $rundir/wrf
+    sh run_wrf.sh $rundir/wrf $sdate
     error=$?
     if [ ${error} -ne 0 ]; then
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -300,6 +310,15 @@ while [ $sdate -le $last_date ]; do
     ### STORE RUN ##
     in_da_doms=`echo $da_doms | sed -e 's/ /_/g'`
     sh $syspath/store_case.bash $rundir $outdir $sdate $firstrun $in_da_doms
+    
+    ### PLOT MAJOR CYCLE FILES ####
+    if [ $realtime -eq 1 ]; then
+       cd $topdir/plotdata
+       if [ $cyc -eq 00 ]; then
+          sh create_img.sh $sdate $imgpath $outpath
+       fi
+    fi
+    
     ## CLEAN UP ##
     echo "Firstrun is $firstrun" >> $logfile
     echo "Program Complete for $sdate" >> $logfile

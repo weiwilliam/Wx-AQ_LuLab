@@ -1,5 +1,5 @@
 #!/bin/bash
-JOBNAME="WRF"
+JOBNAME="WRF_${2}"
 EXE="wrf.exe"
 SCRIPTNAME="${JOBNAME}_runscript"
 NP=28

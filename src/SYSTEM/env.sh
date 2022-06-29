@@ -21,4 +21,3 @@ export I_MPI_CC=icc
 export LD_LIBRARY_PATH="${ASRC_SOFTWARE}/lib:${ASRC_SOFTWARE}/ESMF/lib:${ASRC_SOFTWARE}/NCEP/lib:$LD_LIBRARY_PATH:${ASRC_SOFTWARE}/HDF5/lib:${ASRC_SOFTWARE}/netcdf4/lib"
 export NCARG_ROOT=/network/rit/lab/asrclab/viz/ncl
 export PROJ_LIB=/network/rit/lab/asrclab/soft/python3/share/proj
-
