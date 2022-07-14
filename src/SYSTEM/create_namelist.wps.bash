@@ -10,6 +10,13 @@ emon=${3:4:2}
 eday=${3:6:2}
 ehr=${3:8:2}
 wpspath=${4}
+chem_bc=$5
+
+case $chem_bc in
+1) max_dom=2 ;;
+2) max_dom=1 ;;
+*) ;;
+esac
 
 fileo=$rundir/wps/namelist.wps
 if [ -s $fileo ]; then
@@ -18,7 +25,7 @@ fi
 cat << EOF > $fileo 
 &share
  wrf_core = 'ARW',
- max_dom = 2,
+ max_dom = ${max_dom},
  start_date = '${syear}-${smon}-${sday}_${shr}:00:00','${syear}-${smon}-${sday}_${shr}:00:00',
  end_date   = '${eyear}-${emon}-${eday}_${ehr}:00:00','${eyear}-${emon}-${eday}_${ehr}:00:00',
  interval_seconds = 21600,
@@ -52,8 +59,6 @@ cat << EOF > $fileo
  map_proj = 'lambert',
  ref_lat   =  40.00,
  ref_lon   =  -80.00,
- !ref_x     =  219.5
- !ref_y     =  150.5
  truelat1  =  33.0,
  truelat2  =  45.0,
  stand_lon =  -97.0,

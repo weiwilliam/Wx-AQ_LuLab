@@ -6,10 +6,11 @@ syspath=${2}
 sdate=${3}
 edate=${4}
 num_metgrid_levels=${5}
-chem_opt=${6}
-rhr=${7}
-datpath=${8}
-logfile=${9}
+chem_bc=${6}
+chem_opt=${7}
+rhr=${8}
+datpath=${9}
+logfile=${10}
 
 syear=${3:0:4}
 smon=${3:4:2}
@@ -18,8 +19,6 @@ sday=${3:6:2}
 eyear=${4:0:4}
 emon=${4:4:2}
 eday=${4:6:2}
-
-
 
 mkdir $rundir/emi
 
@@ -150,7 +149,6 @@ fi
 cd $rundir/wrf
 cp $rundir/emi/anth/wrfchemi_d01* .
 
-
 ## 4km NEI for Domain 2
 cd $rundir/emi/anth
 rm wrfchemi_*
@@ -218,7 +216,9 @@ ln -sf $rundir/emi/mozcart/wrf_season_wes_usgs_d* .
 
 
 ################################################################ run real w chem on
-sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels $chem_opt
+# real for chem always not ndown
+lndown=0
+sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels $chem_opt $chem_bc $lndown
 
 cd $rundir/wrf
 sh run_real.sh $rundir/wrf
@@ -230,6 +230,7 @@ if [ ${error} -ne 0 ]; then
 fi
 cp rsl.error.0000 rsl.error.0000.realchem
 cp rsl.out.0000 rsl.out.0000.realchem
+cp namelist.input namelist.input.realchem
 
 
 ######################################### mozbc to prepapre BC if using MOZART chem option
@@ -237,21 +238,49 @@ cp rsl.out.0000 rsl.out.0000.realchem
 mkdir $rundir/mozbc
 cd $rundir/mozbc
 mozbcdir="$rundir/mozbc"
-if [ -f "$datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc" ] ; then
-  ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc h0001.nc
-else
-  echo "WACCM data unavailable for $syear-$smon-$sday !" >> $logfile
-  exit 15
-fi
 
-if [ $sday -ne $eday ]; then
- if [ -f "$datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc" ] ; then 
-   ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc h0002.nc
- else
-   echo "WACCM data unavailable for $eyear-$emon-$eday !" >> $logfile
-   exit 16
- fi
-fi
+case $chem_bc in
+1) chem_bc_path=$datpath/chem/acom
+   chem_file_prefix="" 
+   chem_interval=1
+   ;;
+2) chem_bc_path=$datpath/chem/waccm
+   chem_file_prefix="f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3"
+   chem_interval=24
+   ;;
+esac
+
+chk_date=$sdate
+fidx=1
+while [ $chk_date -le $edate ]
+do
+  chk_yy=${chk_date:0:4}; chk_mm=${chk_date:4:2}
+  chk_dd=${chk_date:6:2}; chk_hh=${chk_date:8:2}
+  chem_file=$chem_bc_path/${chem_file_prefix}.${chk_yy}-${chk_mm}-${chk_dd}-000000.nc
+  if [ -s $chem_file ]; then
+     ln -sf $chem_file h000${fidx}.nc  
+  else
+     echo "Chemistry file unavailable for ${chk_yy}-${chk_mm}-${chk_dd} !" >> $logfile
+     exit 15
+  fi
+  fidx=$((fidx+1))
+done
+
+#if [ -f "$datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc" ] ; then
+#  ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc h0001.nc
+#else
+#  echo "WACCM data unavailable for $syear-$smon-$sday !" >> $logfile
+#  exit 15
+#fi
+#
+#if [ $sday -ne $eday ]; then
+# if [ -f "$datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc" ] ; then 
+#   ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc h0002.nc
+# else
+#   echo "WACCM data unavailable for $eyear-$emon-$eday !" >> $logfile
+#   exit 16
+# fi
+#fi
 #cp $rundir/wps/met_em* .
 #cp $rundir/wrf/wrfin* .
 #cp $rundir/wrf/wrfbdy* .

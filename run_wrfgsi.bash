@@ -1,9 +1,9 @@
 #!/bin/bash
-#set -x
+set -x
 ### This program runs the near realtime (NRT)  WRF-GSI fully cycled system ###
 #################################### SETUP SYSTEM ######################################
 # WRF/Chem choice, only 0 and 114 tested
-chem_opt=114
+chem_opt=0
 realtime=0 
 LISTOS=0
 da_doms="1 2"
@@ -54,8 +54,8 @@ elif [ $realtime -eq 0 ]; then
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
 #   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2022061300" #10 digits time at every 6h; +6 hour forecast
-    last_date="2022061306"
+   first_date="2022070100" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022070100"
    prepbufr_suffix="nr.nysmsfc"
    
    if [ $LISTOS -eq 1 ]; then
@@ -114,21 +114,25 @@ while [ $sdate -le $last_date ]; do
     ## Create Logfile and sdate dependent variables ##
     logfile="$logpath/wrfgsi.log.$sdate"
     echo "Case  $sdate" 
-    echo "Start time:"
-    date
+    echo "Start time: $(date)"
     echo "$sdate" > $logfile
     rundir="$runpath/$sdate"
     datdir="$rundir/dat"
     outdir="$outpath/wrfgsi.out.$sdate"
     
     ## GFS DATA CHECK ##
-    sh $syspath/datacheck_gfs.sh $obsdir $sdate $realtime
+    # Check upstream chemistry field as well and pass different return code for.
+    sh $syspath/datacheck_gfs.sh $obsdir $sdate $edate $realtime $chem_opt
     error=$?
-    if [ ${error} -ne 0 ]; then
+    case $error in
+    0) chem_bc_flag=0 ; lndown=0;;  # chem_opt=0, met-only
+    1) chem_bc_flag=1 ; lndown=1;;  # ACOM
+    2) chem_bc_flag=2 ; lndown=0;;  # WACCM
+    10|11)
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
       echo "GFS data not found by datacheck_gfs.sh." >> $logfile
-      exit ${error}
-    fi
+      exit ${error} ;;
+    esac
     
     ## First Cycle Check ## 
     if [ ! -d $outpath/wrfgsi.out.$pdate ]
@@ -148,30 +152,23 @@ while [ $sdate -le $last_date ]; do
       echo "Run directory already exists. See details in create_case.bash." >> $logfile
       exit ${error}
     fi
-    sh $syspath/create_namelist.wps.bash $rundir $sdate $edate $wpspath
-    sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels 0
+    sh $syspath/create_namelist.wps.bash $rundir $sdate $edate $wpspath $chem_bc_flag
+    sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels 0 $chem_bc_flag $lndown
     error=$?
     if [ ${error} -ne 0 ]; then
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
       echo "Problem to create namelist.input. See details in create_namelist.input.bash." >> $logfile
       exit ${error}
     fi
-     
-    
+
     ##### BEGIN SYSTEM #####
     ## GOTO WPS ##
     cd $rundir/wps
-    if [ $firstrun -eq 1 ]
-    then
-      ## GEOGRID ##
-      sh run_geogrid.sh $rundir/wps 
-      error=$?
-      if [ ${error} -ne 0 ]; then
-        echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-        echo "Unsuccessful run of geogrid.exe." >> $logfile
-        exit ${error}
-      fi
-    fi
+    case $chem_bc_flag in
+    0|2) # rename geo_em.d02 to d01
+         mv geo_em.d01.nc acom_geo_em.d01.nc
+         mv geo_em.d02.nc geo_em.d01.nc ;;
+    esac
     # UNGRIB ##
     ./link_grib.csh $datdir/gfs/
     sh run_ungrib.sh $rundir/wps
@@ -182,17 +179,16 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
     ## METGRID ##
-    sh run_metgrid.sh $rundir/wps
+    sh run_metgrid.sh $rundir/wps 
     error=$?
     if [ ${error} -ne 0 ]; then
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
       echo "Unsuccessful run of metgrid.exe." >> $logfile  
       exit ${error}
     fi
-    
+   
     echo "WPS finish time: $(date)"
-    
-    
+
     ## GOTO WRF ##
     cd $rundir/wrf
     ## REAL ##
@@ -200,6 +196,7 @@ while [ $sdate -le $last_date ]; do
     sh run_real.sh $rundir/wrf
     cp rsl.error.0000 rsl.error.0000.real
     cp rsl.out.0000 rsl.out.0000.real
+    cp namelist.input namelist.input.real
     error=$?
     if [ ${error} -ne 0 ]; then
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -214,8 +211,7 @@ while [ $sdate -le $last_date ]; do
 	if [ $LISTOS -eq 1 ]; then
 	   sh $syspath/WRFCHEM_INPUTLISTOS.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $rhr $datpath $logfile
 	else 
-	   sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_opt $rhr $datpath $logfile
-
+	   sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_bc_flag $chem_opt $rhr $datpath $logfile
    	fi
     fi
 
@@ -226,7 +222,6 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
 
- 
     ## GDAS DATA CHECK ##
     if [ $firstrun -eq 0 ] ## Not first run of cycled system.
     then
@@ -290,6 +285,8 @@ while [ $sdate -le $last_date ]; do
     fi
     
     ## WRF ##
+    [[ $lndown -eq 1 ]] && lndown=0
+    sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels 0 $chem_bc_flag $lndown
     sh run_wrf.sh $rundir/wrf
     error=$?
     if [ ${error} -ne 0 ]; then

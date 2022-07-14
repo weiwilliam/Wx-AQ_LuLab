@@ -42,14 +42,15 @@ ln -sf $wpspath/Vtable .
 ln -sf $wpspath/link_grib.csh .
 ln -sf $wpspath/ungrib.exe .
 ln -sf $wpspath/metgrid.exe .
-if [ $geo -eq 1 ] # geo output includes data for the whole year
-then
-  ln -sf $wpspath/geogrid.exe .
-  ln -sf $syspath/run_geogrid.sh run_geogrid.sh
-else
-  pdate=`sh ${syspath}/get_ndate.bash -$cychr $sdate`
-  cp -f $runpath/$pdate/wps/geo_em.* . 
-fi
+cp -f /network/rit/home/sw651133/test/acom/geo_em.* .
+#if [ $geo -eq 1 ] # geo output includes data for the whole year
+#then
+#  ln -sf $wpspath/geogrid.exe .
+#  ln -sf $syspath/run_geogrid.sh run_geogrid.sh
+#else
+#  pdate=`sh ${syspath}/get_ndate.bash -$cychr $sdate`
+#  cp -f $runpath/$pdate/wps/geo_em.* . 
+#fi
 ln -sf $syspath/run_ungrib.sh run_ungrib.sh
 ln -sf $syspath/run_metgrid.sh run_metgrid.sh
 

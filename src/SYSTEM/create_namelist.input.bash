@@ -12,14 +12,30 @@ ehr=${3:8:2}
 rhr=${4}
 num_metgrid_levels=${5}
 chemopt=${6}
+chem_bc=${7}
+lndown=${8}
 
-#if [ $shr -eq 00 ]
-#then
-#   # Update the rhr with other variables in run_wrfgsi.bash
-#   rhr=6
-#else
-#   rhr=6
-#fi
+# Determine generate two domain or one domain namelist
+case $lndown in
+1) max_dom=2
+   domains=\
+"dx                                  = 12000, 4000,
+ dy                                  = 12000, 4000,
+ e_we                                = 390,   223,
+ e_sn                                = 230,   199,
+ i_parent_start                      = 1,   300,  
+ j_parent_start                      = 1,   137,"  
+;;
+0) max_dom=1
+   domains=\
+"dx                                  = 4000,
+ dy                                  = 4000,
+ e_we                                = 223,
+ e_sn                                = 199,
+ i_parent_start                      = 1,  
+ j_parent_start                      = 1,  "
+;;
+esac
 
 case $chemopt in
 114)
@@ -95,18 +111,18 @@ cat << EOF > $fileo
  run_hours                           = $rhr,
  run_minutes                         = 0,
  run_seconds                         = 0,
- start_year                          = $syear,  $syear, 2018,
- start_month                         = $smon,   $smon,   03,
- start_day                           = $sday,   $sday,   01,
- start_hour                          = $shr,    $shr,   00,
- end_year                            = $eyear,  $eyear, 2018,
- end_month                           = $emon,   $emon,   03,
- end_day                             = $eday,   $eday,   04,
- end_hour                            = $ehr,    $ehr,   00,
+ start_year                          = $syear,  $syear, 
+ start_month                         = $smon,   $smon, 
+ start_day                           = $sday,   $sday,
+ start_hour                          = $shr,    $shr,
+ end_year                            = $eyear,  $eyear,
+ end_month                           = $emon,   $emon,
+ end_day                             = $eday,   $eday,
+ end_hour                            = $ehr,    $ehr,
  interval_seconds                    = 21600
- input_from_file                     = .true.,.true.,.true.,
- history_interval                    =   60,   60,   60,
- frames_per_outfile                  =    1,    1,   1,
+ input_from_file                     = .true.,.true.,
+ history_interval                    =   60,   60,
+ frames_per_outfile                  =    1,    1,
  restart                             = .false.,
  restart_interval                    = 7200,
  io_form_history                     = 2,
@@ -121,23 +137,18 @@ cat << EOF > $fileo
  time_step                           = 60,
  time_step_fract_num                 = 0,
  time_step_fract_den                 = 1,
- max_dom                             = 2,
- e_we                                = 240,   265,   319,
- e_sn                                = 220,   223,   349,
+ max_dom                             = ${max_dom},
  e_vert                              = 50,     50,    50,
  p_top_requested                     = 5000,
- num_metgrid_levels                  = ${num_metgrid_levels},
- num_metgrid_soil_levels             = 4,
- dx                                  = 12000, 4000,  1333.33,
- dy                                  = 12000, 4000,  1333.33,
  grid_id                             = 1,     2,     3,
  parent_id                           = 1,     1,     2,
- i_parent_start                      = 1,   111,   168,
- j_parent_start                      = 1,   94,   162,
+ num_metgrid_levels                  = ${num_metgrid_levels},
+ num_metgrid_soil_levels             = 4,
  parent_grid_ratio                   = 1,     3,     3,
  parent_time_step_ratio              = 1,     3,     3,
  feedback                            = 1,
  smooth_option                       = 0
+ ${domains}
  /
 
  &physics
