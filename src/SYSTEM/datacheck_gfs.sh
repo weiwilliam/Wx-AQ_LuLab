@@ -4,6 +4,9 @@ sdate=${2}
 edate=${3}
 realtime=${4}
 chem_opt=${5}
+max_dom=$6
+run_dom=$7
+
 gfsobsscript="cyclelist.gfs_grib2.out"
 CKFILE="$DATDIR/$gfsobsscript"
 #CHECKPOINT
@@ -36,12 +39,13 @@ if [ $chem_opt -ne 0 ]; then
    acom_edate_output=$DATDIR/../chem/acom/abc.nc
    waccm_edate_output=$DATDIR/../chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.${eyy}-${emm}-${edd}-00000.nc
    # Check ACOM folder
-   if [ -s $acom_edate_output ]; then
-      exit 2
+   if [ -s $acom_edate_output -a $max_dom -ne $run_dom ]; then
+      exit 1
    # Check WACCM folder
    elif [ -s $waccm_edate_output ]; then
-      exit 3
+      exit 2
    else
+   # when have_bcs_chem option ready modify the messages and exit code
       echo "ACOM and WACMM not found"
       exit 17 
    fi 

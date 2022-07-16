@@ -22,6 +22,7 @@ ulimit -s unlimited
   GSIPATH=${6}  # Default path for GSI of wrf-gsi system on Kratos
   PBFRFILE=${7}
   INCONVF=${8}
+  partition=$9
   
   JOBNAME="GSI_d0${GRID_ID}"
   case $GRID_ID in
@@ -478,7 +479,7 @@ MPIRUN=`which mpirun`
 APRUN="/usr/bin/time $MPIRUN"
 cat > ./gsirunscript << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=${nnodes}
 #SBATCH --ntasks-per-node=${nprocs}
@@ -525,25 +526,11 @@ fi
 # Copy the output to more understandable names
 ln -s stdout      stdout.anl.${ANAL_TIME}
 ln -s wrf_inout   wrfanl.${ANAL_TIME}
-ln -s fort.201    fit_p1.${ANAL_TIME}
-ln -s fort.202    fit_w1.${ANAL_TIME}
-ln -s fort.203    fit_t1.${ANAL_TIME}
-ln -s fort.204    fit_q1.${ANAL_TIME}
-ln -s fort.207    fit_rad1.${ANAL_TIME}
+cat fort.2* > gsistat.d0${GRID_ID}.${ANAL_TIME}
 
-# Loop over first and last outer loops to generate innovation
-# diagnostic files for indicated observation types (groups)
-#
-# NOTE:  Since we set miter=2 in GSI namelist SETUP, outer
-#        loop 03 will contain innovations with respect to
-#        the analysis.  Creation of o-a innovation files
-#        is triggered by write_diag(3)=.true.  The setting
-#        write_diag(1)=.true. turns on creation of o-g
-#        innovation files.
-#
 cat > ./gsidiag_runscript << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}_diag
 #SBATCH --output=${workdir}/gsidiag.log
 #SBATCH --ntasks=4

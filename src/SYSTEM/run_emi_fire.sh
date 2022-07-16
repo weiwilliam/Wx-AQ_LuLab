@@ -1,4 +1,5 @@
 #!/bin/bash
+partition=$2
 JOBNAME="FIRE"
 EXE="fire_emis"
 SCRIPTNAME="${JOBNAME}_runscript"
@@ -11,7 +12,7 @@ CKFILE="fire_emis.out"
 INP="fire_emis_MOZCART_T1.inp"
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=1
 #SBATCH --ntasks=8

@@ -11,12 +11,7 @@ eday=${3:6:2}
 ehr=${3:8:2}
 wpspath=${4}
 chem_bc=$5
-
-case $chem_bc in
-1) max_dom=2 ;;
-2) max_dom=1 ;;
-*) ;;
-esac
+max_dom=$6
 
 fileo=$rundir/wps/namelist.wps
 if [ -s $fileo ]; then
@@ -36,10 +31,10 @@ cat << EOF > $fileo
 &geogrid
  parent_id         =   1,   1,    2,
  parent_grid_ratio =   1,   3,    3,
- i_parent_start    =   1,  111,  111,
- j_parent_start    =   1,  94,  54,
- e_we              =  240, 265, 319,
- e_sn              =  220, 223, 319,
+ i_parent_start    =   1,  300,  111,
+ j_parent_start    =   1,  137,  54,
+ e_we              =  390, 223, 319,
+ e_sn              =  230, 199, 319,
  !
  !!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT NOTE !!!!!!!!!!!!!!!!!!!!!!!!!!!!
  ! The default datasets used to produce the MAXSNOALB and ALBEDO12M
@@ -57,10 +52,10 @@ cat << EOF > $fileo
  dx = 12000,
  dy = 12000,
  map_proj = 'lambert',
- ref_lat   =  40.00,
- ref_lon   =  -80.00,
- truelat1  =  33.0,
- truelat2  =  45.0,
+ ref_lat   =  39.0,
+ ref_lon   =  -97.0,
+ truelat1  =  30.0,
+ truelat2  =  60.0,
  stand_lon =  -97.0,
  geog_data_path = '/network/rit/lab/lulab/WRF-GSI/geog/',
  OPT_GEOGRID_TBL_PATH = '$wpspath/geogrid/'

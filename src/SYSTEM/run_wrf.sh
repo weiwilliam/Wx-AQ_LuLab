@@ -1,4 +1,5 @@
 #!/bin/bash
+partition=$2
 JOBNAME="WRF"
 EXE="wrf.exe"
 SCRIPTNAME="${JOBNAME}_runscript"
@@ -12,7 +13,7 @@ export WRFIO_NCD_LARGE_FILE_SUPPORT=1
 
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=${NP}

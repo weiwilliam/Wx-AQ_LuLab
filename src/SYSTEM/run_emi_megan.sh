@@ -1,4 +1,5 @@
 #!/bin/bash
+partition=$2
 JOBNAME="MEGAN"
 EXE="megan_bio_emiss"
 SCRIPTNAME="${JOBNAME}_runscript"
@@ -11,7 +12,7 @@ CKFILE="megan_bio_emiss.out"
 INP="megan_bio_emiss.inp"
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
@@ -20,6 +21,8 @@ cat > ./${SCRIPTNAME} << EOF
 #SBATCH --time=01:00:00
 ulimit -s unlimited
 $APRUN ${1}/${EXE} < ${INP} > ${JOBNAME}.log 2>&1
+rc=\$?
+echo \$rc > ./return_code
 EOF
 
 sbatch ${1}/${SCRIPTNAME}
@@ -39,9 +42,9 @@ count=0
 stopcount=10
 until [ $sqrc -ne 1 ]
 do
-    ls ./ > ${CKFILE}
-    grep -qi "wrfbiochemi_d02" ${CKFILE} 
-    sqrc=$?
+    #ls ./ > ${CKFILE}
+    #grep -qi "wrfbiochemi_d02" ${CKFILE} 
+    sqrc=`cat ./return_code`
     sleep 20
     count=$((count+1))
     if [ $count -eq $stopcount ]

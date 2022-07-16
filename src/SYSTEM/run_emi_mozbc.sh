@@ -1,4 +1,5 @@
 #!/bin/bash
+partition=$2
 JOBNAME="MOZBC"
 EXE="mozbc"
 SCRIPTNAME="${JOBNAME}_runscript"
@@ -11,7 +12,7 @@ CKFILE="mozbc.out"
 INP="MOZCART_T1_LISTOS.inp"
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

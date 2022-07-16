@@ -11,6 +11,8 @@ chem_opt=${7}
 rhr=${8}
 datpath=${9}
 logfile=${10}
+run_dom=${11}
+partition=${12}
 
 syear=${3:0:4}
 smon=${3:4:2}
@@ -71,8 +73,8 @@ if [ $sday -ne $eday ]; then
   awk -F, 'NR>1 {$1='$doya1'; print}' OFS=, FINNdata.txt >> GLOB_MOZ4_previousday.txt
 fi
 
-sh create_emiinp_fire.bash $rundir $sdate $edate
-sh run_emi_fire.sh .
+sh create_emiinp_fire.bash $rundir $sdate $edate $run_dom
+sh run_emi_fire.sh . $partition
 
 error=$?
 if [ ${error} -ne 0 ]; then
@@ -93,8 +95,8 @@ ln -sf /network/rit/lab/lulab/WRF-GSI/src/EMI/MEGAN/megan_bio_emiss .
 ln -sf $syspath/create_emiinp_megan.bash .
 ln -sf $syspath/run_emi_megan.sh .
 
-sh create_emiinp_megan.bash $rundir $sdate $edate
-sh run_emi_megan.sh .
+sh create_emiinp_megan.bash $rundir $sdate $edate $run_dom
+sh run_emi_megan.sh . $partition
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -116,74 +118,53 @@ ln -sf $syspath/create_emiinp_anth.bash .
 ln -sf $syspath/create_emiinp_anth4km.bash .
 ln -sf $syspath/run_emi_anth.sh .
 
-## 12km NEI for Domain 1
-sh create_emiinp_anth.bash $rundir $sdate $edate
-sh run_emi_anth.sh . anthro_emis_2018_12km_MOZCART_T1.inp
-
-error=$?
-if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-  echo "Unsuccessfuly run of 12km anth_emis for Domain 1." >> $logfile
-  exit ${error}
-fi
-
-# change emission year of 2018 to simulation year
-# possible problems for simulation across 2 different years
-if [ ${syear} -ne 2018 ]; then
-# rename file
-  sed -i "s/year/$syear/g" anth_rename.sh
-  sh anth_rename.sh
-
-# change year in file
-  for file in `ls wrfchem*`;
-     do
-        domain=${file:10:2}
-        yy=${file:13:4}
-        mm=${file:18:2}
-        dd=${file:21:2}
-        hh=${file:24:2}
-        ncl domain=$domain yy=$yy mm=$mm dd=$dd hh=$hh anth_change_year.ncl;
-  done;
-fi
-
-cd $rundir/wrf
-cp $rundir/emi/anth/wrfchemi_d01* .
-
-## 4km NEI for Domain 2
-cd $rundir/emi/anth
-rm wrfchemi_*
-sh create_emiinp_anth4km.bash $rundir $sdate $edate
-sh run_emi_anth.sh . anthro_emis_2018_4km_MOZCART_T1.inp
-error=$?
-if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-  echo "Unsuccessfuly run of 4km anth_emis for Domain 2." >> $logfile
-  exit ${error}
-fi
-
-# change emission year of 2018 to simulation year
-# possible problems for simulation across 2 different years
-if [ ${syear} -ne 2018 ]; then
-# rename file
-  sed -i "s/year/$syear/g" anth_rename.sh
-  sh anth_rename.sh
-
-# change year in file
-  for file in `ls wrfchem*`;
-     do
-        domain=${file:10:2}
-        yy=${file:13:4}
-        mm=${file:18:2}
-        dd=${file:21:2}
-        hh=${file:24:2}
-        ncl domain=$domain yy=$yy mm=$mm dd=$dd hh=$hh anth_change_year.ncl;
-  done;
-fi
-
-
-cd $rundir/wrf
-cp $rundir/emi/anth/wrfchemi_d02* .
-cd $rundir/emi/anth
+### 12km NEI for Domain 1
+idom=1
+while [ $idom -le $run_dom ]
+do
+  cd $rundir/emi/anth
+  if [ $idom -eq 1 -a $idom -lt $run_dom ]; then
+     # Coarse domain run with 12 km inventory
+     res_km=12
+     sh create_emiinp_anth.bash $rundir $sdate $edate $run_dom
+  else
+     # Inner domain or single domain: run with 4 km inventory
+     res_km=4
+     sh create_emiinp_anth4km.bash $rundir $sdate $edate $run_dom
+  fi
+  sh run_emi_anth.sh . anthro_emis_2018_${res_km}km_MOZCART_T1.inp $partition
+#
+  error=$?
+  if [ ${error} -ne 0 ]; then
+    echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+    echo "Unsuccessfuly run of ${res_km}km anth_emis for Domain ${idom}." >> $logfile
+    exit ${error}
+  fi
+#
+## change emission year of 2018 to simulation year
+## possible problems for simulation across 2 different years
+  if [ ${syear} -ne 2018 ]; then
+  # rename file
+    sed -i "s/year/$syear/g" anth_rename.sh
+    sh anth_rename.sh
+  
+  # change year in file
+    for file in `ls wrfchem*`;
+       do
+          domain=${file:10:2}
+          yy=${file:13:4}
+          mm=${file:18:2}
+          dd=${file:21:2}
+          hh=${file:24:2}
+          ncl domain=$domain yy=$yy mm=$mm dd=$dd hh=$hh anth_change_year.ncl;
+    done;
+  fi
+  cd $rundir/wrf
+  cp $rundir/emi/anth/wrfchemi_d0${idom}* .
+  
+  idom=$((idom+1))
+done
+cd $rundir/emi/anth 
 rm wrfchemi_*
 ###################################### mozart input files by mozcart_precessor
 mkdir $rundir/emi/mozcart
@@ -194,7 +175,7 @@ ln -sf $syspath/run_emi_exo_coldens.sh .
 ln -sf $syspath/run_emi_wesely.sh .
 
 sh create_emiinp_mozcart.bash $rundir
-sh run_emi_exo_coldens.sh .
+sh run_emi_exo_coldens.sh . $partition
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -202,7 +183,7 @@ if [ ${error} -ne 0 ]; then
   exit ${error}
 fi
 
-sh run_emi_wesely.sh .
+sh run_emi_wesely.sh . $partition
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -221,7 +202,7 @@ lndown=0
 sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels $chem_opt $chem_bc $lndown
 
 cd $rundir/wrf
-sh run_real.sh $rundir/wrf
+sh run_real.sh $rundir/wrf $partition
 error=$?
 if [ ${error} -ne 0 ]; then
   echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
@@ -251,39 +232,22 @@ case $chem_bc in
 esac
 
 chk_date=$sdate
-fidx=1
+fidx=0
 while [ $chk_date -le $edate ]
 do
   chk_yy=${chk_date:0:4}; chk_mm=${chk_date:4:2}
   chk_dd=${chk_date:6:2}; chk_hh=${chk_date:8:2}
-  chem_file=$chem_bc_path/${chem_file_prefix}.${chk_yy}-${chk_mm}-${chk_dd}-000000.nc
+  chem_file=$chem_bc_path/${chem_file_prefix}.${chk_yy}-${chk_mm}-${chk_dd}-00000.nc
   if [ -s $chem_file ]; then
+     fidx=$((fidx+1))
      ln -sf $chem_file h000${fidx}.nc  
   else
      echo "Chemistry file unavailable for ${chk_yy}-${chk_mm}-${chk_dd} !" >> $logfile
      exit 15
   fi
-  fidx=$((fidx+1))
+  chk_date=`sh ${syspath}/get_ndate.bash $chem_interval $chk_date`
 done
 
-#if [ -f "$datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc" ] ; then
-#  ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$syear-$smon-$sday-00000.nc h0001.nc
-#else
-#  echo "WACCM data unavailable for $syear-$smon-$sday !" >> $logfile
-#  exit 15
-#fi
-#
-#if [ $sday -ne $eday ]; then
-# if [ -f "$datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc" ] ; then 
-#   ln -sf $datpath/chem/waccm/f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3.$eyear-$emon-$eday-00000.nc h0002.nc
-# else
-#   echo "WACCM data unavailable for $eyear-$emon-$eday !" >> $logfile
-#   exit 16
-# fi
-#fi
-#cp $rundir/wps/met_em* .
-#cp $rundir/wrf/wrfin* .
-#cp $rundir/wrf/wrfbdy* .
 ln -sf $rundir/wps/met_em* .
 ln -sf $rundir/wrf/wrfin* .
 ln -sf $rundir/wrf/wrfbdy* .
@@ -294,28 +258,34 @@ ln -sf /network/rit/lab/lulab/sw651133/mozbc/mozbc .
 ln -sf $syspath/create_emiinp_mozbc.bash .
 ln -sf $syspath/run_emi_mozbc.sh .
 
-echo "mozbc for Domain 2:"
-do_bc=.false.
-domain=2
-sh create_emiinp_mozbc.bash $mozbcdir $do_bc $domain
-sh run_emi_mozbc.sh .
-error=$?
-if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-  echo "Unsuccessfuly run of mozbc for Domain 2." >> $logfile
-  exit ${error}
-fi
+#echo "mozbc for Domain 2:"
+#do_bc=.false.
+#domain=2
+#sh create_emiinp_mozbc.bash $mozbcdir $do_bc $domain
+#sh run_emi_mozbc.sh .
+#error=$?
+#if [ ${error} -ne 0 ]; then
+#  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+#  echo "Unsuccessfuly run of mozbc for Domain 2." >> $logfile
+#  exit ${error}
+#fi
+idom=1
+while [ $idom -le $run_dom ]
+do
+  echo "mozbc for Domain ${idom}:"
+  if [ $idom -eq 1 ]; then
+     do_bc=.true.
+  else
+     do_bc=.false.
+  fi
+  sh create_emiinp_mozbc.bash $mozbcdir $do_bc $idom
+  sh run_emi_mozbc.sh . $partition
 
-echo "mozbc for Domain 1:"
-do_bc=.true.
-domain=1
-sh create_emiinp_mozbc.bash $mozbcdir $do_bc $domain
-sh run_emi_mozbc.sh .
-
-error=$?
-if [ ${error} -ne 0 ]; then
-  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-  echo "Unsuccessfuly run of mozbc for Domain 1." >> $logfile
-  exit ${error}
-fi
-
+  error=$?
+  if [ ${error} -ne 0 ]; then
+    echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+    echo "Unsuccessfuly run of mozbc for Domain ${idom}." >> $logfile
+    exit ${error}
+  fi
+  idom=$((idom+1))
+done

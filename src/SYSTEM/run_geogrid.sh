@@ -1,4 +1,5 @@
 #!/bin/bash
+partition=$2
 JOBNAME="GEOGRID"
 EXE="geogrid.exe"
 SCRIPTNAME="${JOBNAME}_runscript"
@@ -11,7 +12,7 @@ CKFILE="geogrid.log.0000"
 
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=${partition}
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
