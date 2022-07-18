@@ -12,7 +12,7 @@ da_doms="1"
 major_rhr=6
 cycle_rhr=6
 major_cycle_list="00"
-clean_up=1
+clean_up=0
 # When run retro case (realtime=0), please carefully 
 # define your own path for $obsdir, $datpath, $runpath, $outpath below.
 
@@ -58,8 +58,8 @@ elif [ $realtime -eq 0 ]; then
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
 #   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2022070100" #10 digits time at every 6h; +6 hour forecast
-    last_date="2022070100"
+   first_date="2022070118" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022070118"
    prepbufr_suffix="nr.nysmsfc"
    
    if [ $LISTOS -eq 1 ]; then
@@ -117,9 +117,9 @@ while [ $sdate -le $last_date ]; do
     
     ## Create Logfile and sdate dependent variables ##
     logfile="$logpath/wrfgsi.log.$sdate"
-    echo "Case  $sdate" 
-    echo "Start time: $(date)"
-    echo "$sdate" > $logfile
+    #echo "Case $sdate" | tee -a $logfile
+    echo "$(date): Start case $sdate" | tee -a $logfile
+    #echo "$sdate" > $logfile
     rundir="$runpath/$sdate"
     datdir="$rundir/dat"
     outdir="$outpath/wrfgsi.out.$sdate"
@@ -179,10 +179,10 @@ while [ $sdate -le $last_date ]; do
     0|2) 
        if [ $run_dom -eq 1 ]; then
           mv geo_em.d01.nc geo_em.d01.nc.outer
-          mv geo_em.d02.nc geo_em.d01.nc 
+          cp geo_em.d02.nc geo_em.d01.nc 
        fi ;;
     1) 
-       if [ -s geo_em.d01.nc.acom ]; then
+       if [ -s geo_em.d01.nc.outer ]; then
           echo "WACCM chem_bc was used in $pdate, rename geo_em for ndown"
           mv geo_em.d01.nc geo_em.d02.nc
           mv geo_em.d01.nc.outer geo_em.d01.nc
@@ -216,7 +216,7 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
    
-    echo "WPS finish time: $(date)"
+    echo "$(date): Finish WPS " | tee -a $logfile
 
     ## GOTO WRF ##
     cd $rundir/wrf
@@ -243,7 +243,7 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
 
-    echo "Real finish time: $(date)"
+    echo "$(date): Finish Real" | tee -a $logfile
 
     if [ $lndown -eq 1 ]; then
        echo "Running ndown"
@@ -261,13 +261,14 @@ while [ $sdate -le $last_date ]; do
 	   sh $syspath/WRFCHEM_INPUT.bash $rundir $syspath $sdate $edate $num_metgrid_levels $chem_bc_flag \
                                           $chem_opt $rhr $datpath $logfile $run_dom $partition
    	fi
-    fi
+        error=$?
+        if [ ${error} -ne 0 ]; then
+          echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
+          echo "Unsuccessful chem data preparation!." >> $logfile
+          exit ${error}
+        fi
 
-    error=$?
-    if [ ${error} -ne 0 ]; then
-      echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-      echo "Unsuccessful chem data preparation!." >> $logfile
-      exit ${error}
+        echo "$(date): Finish WRFCHEM_INPUT" | tee -a $logfile
     fi
 
     ## GDAS DATA CHECK ##
@@ -280,7 +281,7 @@ while [ $sdate -le $last_date ]; do
           firstrun=1
        fi
     fi
-    if [ $firstrun -eq 0 ] ## Not first run of cycled system. So run GSI and LBC before WRF
+    if [ $firstrun -eq 0 -a ! -z $da_doms ] ## Not first run of cycled system. So run GSI and LBC before WRF
     then
        ## GOTO GSI ##
        cd $rundir/gsi
@@ -330,11 +331,14 @@ while [ $sdate -le $last_date ]; do
        do
           mv wrfinput_d0${d} wrfinput_d0${d}.real
           if [ $d -eq 1 ]; then
-             cp $rundir/lbc/wrf_inout wrfinput_d0${d}
+             mv wrfbdy_d0${d} wrfbdy_d0${d}.bf_lbc
+             cp $rundir/lbc/wrf_inout $rundir/wrf/wrfinput_d0${d}
+             cp $rundir/lbc/wrfbdy_d0${d} $rundir/wrf/wrfbdy_d0${d}
           else
              cp $rundir/gsi/d0${d}/wrf_inout wrfinput_d0${d}
           fi
        done
+       echo "$(date): Finish GSI" | tee -a $logfile
     fi
     
     ## WRF ##
@@ -348,7 +352,7 @@ while [ $sdate -le $last_date ]; do
       exit ${error}
     fi
 
-    echo "WRF finish time: $(date)"
+    echo "$(date): Finish WRF" | tee -a $logfile
     
     ### STORE RUN ##
     in_da_doms=`echo $da_doms | sed -e 's/ /_/g'`
@@ -365,8 +369,8 @@ while [ $sdate -le $last_date ]; do
     fi
 
     echo "Firstrun is $firstrun" >> $logfile
-    echo "Program Complete for $sdate" >> $logfile
-    echo "Program Complete for $sdate" 
+    echo "Program Complete for $sdate" | tee -a $logfile
+    #echo "Program Complete for $sdate" 
     
     ndate=`sh ${syspath}/get_ndate.bash $cycle_rhr $sdate`
     sdate=$ndate

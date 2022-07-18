@@ -224,14 +224,16 @@ case $chem_bc in
 1) chem_bc_path=$datpath/chem/acom
    chem_file_prefix="" 
    chem_interval=1
+   chk_date=${sdate}
    ;;
 2) chem_bc_path=$datpath/chem/waccm
    chem_file_prefix="f.e22.beta02.FWSD.f09_f09_mg17.cesm2_2_beta02.forecast.001.cam.h3"
    chem_interval=24
+   chk_date=${sdate:0:4}${sdate:4:2}${sdate:6:2}00
    ;;
 esac
 
-chk_date=$sdate
+#chk_date=$sdate
 fidx=0
 while [ $chk_date -le $edate ]
 do
@@ -258,17 +260,6 @@ ln -sf /network/rit/lab/lulab/sw651133/mozbc/mozbc .
 ln -sf $syspath/create_emiinp_mozbc.bash .
 ln -sf $syspath/run_emi_mozbc.sh .
 
-#echo "mozbc for Domain 2:"
-#do_bc=.false.
-#domain=2
-#sh create_emiinp_mozbc.bash $mozbcdir $do_bc $domain
-#sh run_emi_mozbc.sh .
-#error=$?
-#if [ ${error} -ne 0 ]; then
-#  echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile
-#  echo "Unsuccessfuly run of mozbc for Domain 2." >> $logfile
-#  exit ${error}
-#fi
 idom=1
 while [ $idom -le $run_dom ]
 do

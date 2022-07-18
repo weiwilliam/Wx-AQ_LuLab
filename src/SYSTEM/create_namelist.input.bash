@@ -17,7 +17,7 @@ lndown=${8}
 
 # Determine generate two domain or one domain namelist
 case $lndown in
-1) max_dom=2
+1) max_dom=2 ; t_stp=60
    domains=\
 "dx                                  = 12000, 4000,
  dy                                  = 12000, 4000,
@@ -26,7 +26,7 @@ case $lndown in
  i_parent_start                      = 1,   300,  
  j_parent_start                      = 1,   137,"  
 ;;
-0) max_dom=1
+0) max_dom=1 ; t_stp=20
    domains=\
 "dx                                  = 4000,
  dy                                  = 4000,
@@ -134,11 +134,11 @@ cat << EOF > $fileo
  /
 
  &domains
- time_step                           = 60,
+ time_step                           = ${t_stp},
  time_step_fract_num                 = 0,
  time_step_fract_den                 = 1,
  max_dom                             = ${max_dom},
- e_vert                              = 50,     50,    50,
+ e_vert                              = 43,   43,    43,
  p_top_requested                     = 5000,
  grid_id                             = 1,     2,     3,
  parent_id                           = 1,     1,     2,
@@ -148,6 +148,13 @@ cat << EOF > $fileo
  parent_time_step_ratio              = 1,     3,     3,
  feedback                            = 1,
  smooth_option                       = 0
+ eta_levels                          = 1.0,0.999,0.996,0.992,0.985,0.975,0.963,
+                                       0.949,0.932,0.913,0.891,0.864,0.843,
+                                       0.824,0.808,0.793,0.783,0.773,0.758,
+                                       0.739,0.711,0.666,0.599,0.530,0.465,
+                                       0.406,0.354,0.322,0.297,0.278,0.262,
+                                       0.249,0.238,0.228,0.216,0.2,0.178,
+                                       0.152,0.121,0.09,0.059,0.028,0.0,
  ${domains}
  /
 
