@@ -9,7 +9,7 @@ LISTOS=0
 max_dom=2
 run_dom=1 
 da_doms="1"
-major_rhr=6
+major_rhr=36
 cycle_rhr=6
 major_cycle_list="00"
 clean_up=0
@@ -58,8 +58,8 @@ elif [ $realtime -eq 0 ]; then
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
 #   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2022070118" #10 digits time at every 6h; +6 hour forecast
-    last_date="2022070118"
+   first_date="2022070300" #10 digits time at every 6h; +6 hour forecast
+    last_date="2022071912"
    prepbufr_suffix="nr.nysmsfc"
    
    if [ $LISTOS -eq 1 ]; then
@@ -331,7 +331,7 @@ while [ $sdate -le $last_date ]; do
        do
           mv wrfinput_d0${d} wrfinput_d0${d}.real
           if [ $d -eq 1 ]; then
-             mv wrfbdy_d0${d} wrfbdy_d0${d}.bf_lbc
+             #mv wrfbdy_d0${d} wrfbdy_d0${d}.bf_lbc
              cp $rundir/lbc/wrf_inout $rundir/wrf/wrfinput_d0${d}
              cp $rundir/lbc/wrfbdy_d0${d} $rundir/wrf/wrfbdy_d0${d}
           else
