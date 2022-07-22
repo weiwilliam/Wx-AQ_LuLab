@@ -3,8 +3,9 @@
 rundir=${1}
 outdir=${2}
 sdate=${3}
-firstrun=${4}
-da_doms=${5}
+pdate=${4}
+firstrun=${5}
+da_doms=${6}
 da_doms=`echo $da_doms | sed -e 's/_/ /g'`
 
 if [ -d $outdir ]
@@ -35,11 +36,7 @@ then
      cp -f $rundir/gsi/d0$dom/stdout $outdir/stdout_d0${dom}
      cp -f $rundir/gsi/d0$dom/diag_* $outdir/.
      cp -f $rundir/gsi/d0$dom/gsiparm.anl $outdir/gsiparm_d0${dom}.anl
-     cp -f $rundir/gsi/d0$dom/fort.201 $outdir/fort_d0${dom}.201
-     cp -f $rundir/gsi/d0$dom/fort.202 $outdir/fort_d0${dom}.202
-     cp -f $rundir/gsi/d0$dom/fort.203 $outdir/fort_d0${dom}.203
-     cp -f $rundir/gsi/d0$dom/fort.213 $outdir/fort_d0${dom}.213
-     cp -f $rundir/gsi/d0$dom/fort.220 $outdir/fort_d0${dom}.220
+     cp -f $rundir/gsi/d0$dom/gsistat.d0${dom}.$sdate $outdir/gsistat.d0${dom}.$sdate
   done
   #LBC
   cp -f $rundir/lbc/parame.in $outdir/.

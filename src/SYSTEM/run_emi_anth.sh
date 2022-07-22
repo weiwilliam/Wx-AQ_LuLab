@@ -10,10 +10,11 @@ APRUN="/usr/bin/time $MPIRUN -np ${NP}"
 CKFILE="anthro_emis.out"
 #INP="anthro_emis_2018_12km_MOZCART_T1.inp"
 INP=${2}
+partition=$3
 
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=1
 #SBATCH --ntasks=8

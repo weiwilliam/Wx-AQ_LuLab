@@ -9,6 +9,7 @@ eyear=${3:0:4}
 emon=${3:4:2}
 eday=${3:6:2}
 ehr=${3:8:2}
+run_dom=$4
 
 fileo=$rundir/emi/megan/megan_bio_emiss.inp
 cat << EOF > $fileo 
@@ -16,7 +17,7 @@ cat << EOF > $fileo
 
 &control
 
-domains = 2,
+domains = $run_dom,
 start_lai_mnth = $smon,
 end_lai_mnth   = $emon,
 

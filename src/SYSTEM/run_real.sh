@@ -1,4 +1,5 @@
 #!/bin/bash
+partition=$2
 JOBNAME="REAL"
 EXE="real.exe"
 SCRIPTNAME="${JOBNAME}_runscript"
@@ -10,7 +11,7 @@ APRUN="/usr/bin/time $MPIRUN -np ${NP}"
 CKFILE="rsl.error.0000"
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=1
 #SBATCH --ntasks=8

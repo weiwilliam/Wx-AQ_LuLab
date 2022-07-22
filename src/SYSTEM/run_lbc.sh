@@ -1,4 +1,5 @@
 #!/bin/bash
+partition=$2
 JOBNAME="LBC"
 EXE="da_update_bc.exe"
 SCRIPTNAME="${JOBNAME}_runscript"
@@ -20,7 +21,7 @@ cp -f $rundir/gsi/d01/wrf_inout .
 
 cat > ./${SCRIPTNAME} << EOF
 #!/bin/bash
-#SBATCH --partition=kratos
+#SBATCH --partition=$partition
 #SBATCH --job-name=${JOBNAME}
 #SBATCH --nodes=1
 #SBATCH --ntasks=${NP}
@@ -50,8 +51,3 @@ then
     exit 7
 fi
 
-cp wrfbdy_d01 $rundir/wrf/.
-
-
-#sbatch -p kratos -N1 --exclusive --mem=28000 --wrap="/usr/bin/time mpirun -np 14 /network/rit/home/dg771199/WRF-GSI/src/WPS/geogrid.exe"
-#sbatch -p kratos -N1 --exclusive --mem=28000 --wrap="/usr/bin/time mpirun -np 14 ${1}/geogrid.exe"

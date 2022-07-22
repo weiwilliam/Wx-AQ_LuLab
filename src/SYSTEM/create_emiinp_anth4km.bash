@@ -9,6 +9,7 @@ eyear=${3:0:4}
 emon=${3:4:2}
 eday=${3:6:2}
 ehr=${3:8:2}
+run_dom=${4}
 
 fileo=$rundir/emi/anth/anthro_emis_2018_4km_MOZCART_T1.inp
 cat << EOF > $fileo
@@ -17,7 +18,7 @@ cat << EOF > $fileo
  wrf_dir    = '$rundir/wrf'
  src_lon_dim_name = 'COL'
  src_lat_dim_name = 'ROW'
- domains = 2
+ domains = $run_dom
  cat_var_prefix = ' '
  output_interval = 3600
  diag_level = 100
