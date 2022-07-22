@@ -30,6 +30,7 @@ lbcpath="/network/rit/lab/lulab/WRF-GSI/src/LBC"
 gsipath="/network/rit/lab/lulab/WRF-GSI/src/GSI"
 source $syspath/env.sh
 partition=batch
+wrf_partition=kratos
 
 if [ $realtime -eq 1 ]; then
    ## Input ##
@@ -58,7 +59,7 @@ elif [ $realtime -eq 0 ]; then
 #   runpath="/network/asrc/scratch/lulab/hluo/run"
 #   outpath="/network/rit/lab/lulab/hluo/out"
    logpath="$outpath/log"
-   first_date="2022070300" #10 digits time at every 6h; +6 hour forecast
+   first_date="2022070412" #10 digits time at every 6h; +6 hour forecast
     last_date="2022071912"
    prepbufr_suffix="nr.nysmsfc"
    
@@ -344,7 +345,7 @@ while [ $sdate -le $last_date ]; do
     ## WRF ##
     [[ $lndown -eq 1 ]] && lndown=0
     sh $syspath/create_namelist.input.bash $rundir $sdate $edate $rhr $num_metgrid_levels $chem_opt $chem_bc_flag $lndown
-    sh run_wrf.sh $rundir/wrf $partition
+    sh run_wrf.sh $rundir/wrf $wrf_partition
     error=$?
     if [ ${error} -ne 0 ]; then
       echo "ERROR: WRF-GSI crashed Exit status=${error}." >> $logfile

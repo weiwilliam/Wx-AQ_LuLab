@@ -26,7 +26,7 @@ case $lndown in
  i_parent_start                      = 1,   300,  
  j_parent_start                      = 1,   137,"  
 ;;
-0) max_dom=1 ; t_stp=20
+0) max_dom=1 ; t_stp=15
    domains=\
 "dx                                  = 4000,
  dy                                  = 4000,
@@ -230,8 +230,8 @@ cat << EOF > $fileo
  /
 
  &namelist_quilt
- nio_tasks_per_group = 0,
- nio_groups = 1,
+ nio_tasks_per_group = 2,
+ nio_groups = 2,
  /
 
  
